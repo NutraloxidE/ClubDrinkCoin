@@ -340,16 +340,6 @@ async function main() {
 
 }
 
-export async function InitializeNewKeyPair (password) {
-
-  /**
-   * What i do here:
-   * 1.make KeyPair by generateKeyPair();
-   * 2.set DoIHaveKeyPair to true
-   * 3.
-   */
-}
-
 async function encodeAndDecodeTest() {
   //key generation test
   let keyPair = await generateKeyPair();

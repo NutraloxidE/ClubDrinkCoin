@@ -4,8 +4,11 @@ import * as ClubDrinkCoinCore from './ClubDrinkCoinCore.js';
 
 export async function InitNewWalletByClicking() {
   const walletName = prompt("Enter wallet name or description:");
+  if (walletName == null) { alert("Wallet creation cancelled"); return false; };
   const password = prompt("Enter password (DO NOT LOSE IT YOU CANT CHANGE PASSWORD):");
+  if (password == null) { alert("Wallet creation cancelled"); return false; };
   const confirmPW = prompt("Confirm password (!!!DO NOT LOSE IT YOU CANT CHANGE PASSWOR!!!):");
+  if (confirmPW == null) { alert("Wallet creation cancelled"); return false; };
 
   if (password == ""){
     alert("Password cannot be empty");
@@ -19,14 +22,22 @@ export async function InitNewWalletByClicking() {
 
   //generate new wallet
   try{
+
+    //generate new wallet
     var walletJustGenerated = await ClubDrinkCoinCore.Wallet.GetNewWallet(walletName, password);
     ClubDrinkCoinCore.setMyWallet(walletJustGenerated);
+    
+    //save wallet to local storage
+    var tempStoredWallet = walletJustGenerated.storedWallet;
+    localStorage.setItem('storedWallet', JSON.stringify(tempStoredWallet));
+    console.log("Wallet saved to local storage");
+
   } catch (e) {
     alert("Error: " + e);
     return false;
   }
 
-  let userConfirmed = false;
+  let userConfirmed = false
   while (!userConfirmed) {
     userConfirmed = confirm("!!!!!!!!!IMPORTANT!!!!!!!!! \r\n\r\n You gonna download your wallet file now. Keep it safe and do not lose it. You will need it to access your wallet.");
   }
@@ -36,9 +47,52 @@ export async function InitNewWalletByClicking() {
 
 }
 
+export async function DeleteWalletFromLocalStorage(storedWallet) {
+
+  if (localStorage.getItem('storedWallet') == null) {
+    alert("No wallet found in local storage");
+    return false;
+  }
+
+  let confirmDelete = confirm("Are you sure you want to delete your wallet from local storage?");
+  if (!confirmDelete) {
+    return false;
+  }
+  localStorage.removeItem('storedWallet');
+  alert("Wallet deleted from local storage");
+  ClubDrinkCoinCore.setDoIHaveKeyPair(false);
+}
+
+
+export async function ImportWalletFromLocalStorage() {
+  let storedWalletJson = JSON.parse(localStorage.getItem('storedWallet'));
+
+  if (storedWalletJson == null) {
+    console.log("No wallet found in local storage");
+    return false;
+  }else{
+    console.log(storedWalletJson);
+  }
+
+  console.log(storedWalletJson);
+
+  let wallet;
+
+  let password = prompt("Found a wallet on your browser! \r\nEnter password for the wallet:");
+  if (password == "") {
+    alert("Password cannot be empty");
+    return false;
+  }
+
+  wallet = await ClubDrinkCoinCore.Wallet.LoadWalletFromStoredWalled(storedWalletJson, password);
+
+  ClubDrinkCoinCore.setMyWallet(wallet);
+  ClubDrinkCoinCore.setDoIHaveKeyPair(true);
+}
+
 export async function ImportWalletByClicking (warning) {
   if(warning) {
-    confirmOverwrite = confirm("Importing wallet will overwrite your current wallet. Are you sure?");
+    let confirmOverwrite = confirm("Importing wallet will overwrite your current wallet. Are you sure?");
     if (!confirmOverwrite) {
       return false;
     }
@@ -80,12 +134,17 @@ export async function ImportWalletByClicking (warning) {
 
 
   let wallet;
+  try{
   wallet = await ClubDrinkCoinCore.Wallet.LoadWalletFromStoredWalled(storedWalletJson, password);
+  } catch (e) {
+    alert("Password is incorrect or probably wrong file format: " + e);
+    return false;
+  }
 
 
   ClubDrinkCoinCore.setMyWallet(wallet);
   ClubDrinkCoinCore.setDoIHaveKeyPair(true);
-
+  alert("Wallet imported successfully!");
 }
 
 export async function SaveStoredWalletAsFile(storedWallet) {
@@ -94,7 +153,8 @@ export async function SaveStoredWalletAsFile(storedWallet) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = "wallet" + storedWallet.walletName + ".ClubDrinkCoinWallet";
+  await console.log(storedWallet);
+  link.download = await "wallet-" + storedWallet.walletName + ".ClubDrinkCoinWallet";
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);

@@ -26,12 +26,14 @@
   <h3>Your Wallet Address (Base64Encoded Public key)</h3>
   <p id="publicKeyDom">Loading...</p>
   <button id="ButtonCopyPublicKey">Copy to clipboard</button>
-  <button id="ButtonDownloadPublicKey">Save as .txt</button>
+  <button id="ButtonDownloadPublicKey">Save your address as .txt</button>
   <br>
   <a id="ButtonShowOptions" href="#" style="font-size: smallest;">Show Wallet Options</a>
   <button id="ButtonDownloadWallet" style="display: none;">Download Wallet</button>
   <button id="ButtonImportWallet" style="display: none;">Import Wallet</button>
   <button id="ButtonCreateNewWallet" style="display: none;">Create New Wallet</button>
+  <p id = "BeCarefulLine" style="display: none;" > ----------------- Be careful! ----------------- </p>
+  <button id="ButtonDeleteWalletFromLocalStorage" style="display: none;">!!!Delete Wallet!!!</button>
   <br>
 
   
@@ -43,7 +45,13 @@
     import * as ClubDrinkCoinCore from './ClubDrinkCoin/ClubDrinkCoinCore.js';
     import * as BrowserInterface from './ClubDrinkCoin/BrowserInterface.js';
 
-    //save to local
+    //Get wallet if local storage has it
+    window.onload = async () => {
+      await BrowserInterface.ImportWalletFromLocalStorage();
+      await showKey();
+    };
+
+    //save publickey to file
     document.getElementById('ButtonDownloadPublicKey').addEventListener('click', () => {
       BrowserInterface.SavePublicKeyAsFile(ClubDrinkCoinCore.MyWallet.keyPair.publicKey);
     });
@@ -87,19 +95,55 @@
     }
 
     //Show hide options
+    const DOMbuttonShowOptions = document.getElementById('ButtonShowOptions');
+    const DOMbuttonDownloadWallet = document.getElementById('ButtonDownloadWallet');
+    const importButton = document.getElementById('ButtonImportWallet');
+    const createButton = document.getElementById('ButtonCreateNewWallet');
+    const BeCarefulLine = document.getElementById('BeCarefulLine');
+    const deleteButton = document.getElementById('ButtonDeleteWalletFromLocalStorage');
     document.getElementById('ButtonShowOptions').addEventListener('click', () => {
-      const downloadButton = document.getElementById('ButtonDownloadWallet');
-      const importButton = document.getElementById('ButtonImportWallet');
-      const createButton = document.getElementById('ButtonCreateNewWallet');
-      if (downloadButton.style.display === 'none') {
-        downloadButton.style.display = 'block';
+      if (DOMbuttonDownloadWallet.style.display === 'none') {
+        DOMbuttonShowOptions.textContent = 'Hide Wallet Options';
+        DOMbuttonDownloadWallet.style.display = 'block';
         importButton.style.display = 'block';
         createButton.style.display = 'block';
+        BeCarefulLine.style.display = 'block';
+        deleteButton.style.display = 'block';
       } else {
-        downloadButton.style.display = 'none';
+        DOMbuttonShowOptions.textContent = 'Show Wallet Options';
+        DOMbuttonDownloadWallet.style.display = 'none';
         importButton.style.display = 'none';
         createButton.style.display = 'none';
+        BeCarefulLine.style.display = 'none';
+        deleteButton.style.display = 'none';
       }
+    });
+
+    //save wallet to file
+    DOMbuttonDownloadWallet.addEventListener('click', () => {
+      BrowserInterface.SaveStoredWalletAsFile(ClubDrinkCoinCore.MyWallet.storedWallet);
+    });
+
+    //import wallet from file
+    importButton.addEventListener('click', async () => {
+      await BrowserInterface.ImportWalletByClicking(true);
+      showKey();
+    });
+
+    //create new wallet
+    createButton.addEventListener('click', async () => {
+      let userConfirmed = confirm('Are you sure to create new wallet? If you have a wallet already, it will be deleted. (make sure to save your wallet before creating new one)');
+      if(userConfirmed == false){
+        return;
+      }
+      await BrowserInterface.InitNewWalletByClicking();
+      showKey();
+    });
+
+    //delete wallet from local storage
+    deleteButton.addEventListener('click', async () => {
+      await BrowserInterface.DeleteWalletFromLocalStorage();
+      showKey();
     });
 
   </script>
