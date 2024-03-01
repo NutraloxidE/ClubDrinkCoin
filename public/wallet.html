@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>My Web Page</title>
+  <style>
+    h1, h2, h3, p, button {
+      margin: 0px 0; /* 上下のマージンを10pxに設定 */
+    }
+  </style>
+</head>
+<body>
+  <h1>Club Drink Coin :)</h1>
+  <p>The crypt currency for buying drink!</p>
+  <br>
+  <h3>Your Wallet Address (Base64Encoded Public key)</h3>
+  <p id="publicKeyDom">Loading...</p>
+  <button id="ButtonCopyPublicKey">Copy to clipboard</button>
+  <button id="ButtonDownloadPublicKey">Save as .txt</button>
+
+
+  <!-- 
+    Write only UI logic here.
+  -->
+  <script type="module">
+    import * as ClubDrinkCoinCore from './ClubDrinkCoin/ClubDrinkCoinCore.js';
+    import * as BrowserInterface from './ClubDrinkCoin/BrowserInterface.js';
+
+    //save to local
+    document.getElementById('ButtonDownloadPublicKey').addEventListener('click', () => {
+      BrowserInterface.SavePublicKeyAsFile(ClubDrinkCoinCore.MyOwnKeyPair.publicKey);
+    });
+
+    //copy to clipboard
+    document.getElementById('ButtonCopyPublicKey').addEventListener('click', async () => {
+      const key = ClubDrinkCoinCore.MyOwnKeyPair.publicKey;
+      const encodedKey = await ClubDrinkCoinCore.GetBase64EncodedPublicKey(key);
+    navigator.clipboard.writeText(encodedKey)
+      .then(() => {
+        console.log('Public key copied to clipboard.');
+      })
+      .catch(err => {
+        console.error('Could not copy text: ', err);
+      });
+    });
+
+    //Show key on the page
+    setInterval(async () => {
+      // ここに5秒ごとに実行したいコードを書く
+      await showKey();
+    }, 1000); // 5000ミリ秒 = 5秒
+
+    async function showKey (){
+      const key = ClubDrinkCoinCore.MyOwnKeyPair.publicKey;
+      document.getElementById('publicKeyDom').textContent = await ClubDrinkCoinCore.GetBase64EncodedPublicKey(key);
+    }
+    
+
+  </script>
+</body>
+</html>
