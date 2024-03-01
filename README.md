@@ -1,2 +1,2 @@
 # ClubDrinkCoin
-A crypt currency for buyg drink at club
+A crypt currency for buying drink at club
