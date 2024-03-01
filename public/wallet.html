@@ -1,10 +1,21 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>My Web Page</title>
+  <title>Club Drink Coin :)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     h1, h2, h3, p, button {
-      margin: 0px 0; /* 上下のマージンを10pxに設定 */
+      margin: 1px 0; /* 上下のマージンを10pxに設定 */
+    }
+
+    body {
+      font-size: 18px;
+    }
+
+    @media screen and (max-width: 600px) {
+      body {
+        font-size: 22px;
+      }
     }
   </style>
 </head>
@@ -16,7 +27,14 @@
   <p id="publicKeyDom">Loading...</p>
   <button id="ButtonCopyPublicKey">Copy to clipboard</button>
   <button id="ButtonDownloadPublicKey">Save as .txt</button>
+  <br>
+  <a id="ButtonShowOptions" href="#" style="font-size: smallest;">Show Wallet Options</a>
+  <button id="ButtonDownloadWallet" style="display: none;">Download Wallet</button>
+  <button id="ButtonImportWallet" style="display: none;">Import Wallet</button>
+  <button id="ButtonCreateNewWallet" style="display: none;">Create New Wallet</button>
+  <br>
 
+  
 
   <!-- 
     Write only UI logic here.
@@ -27,12 +45,12 @@
 
     //save to local
     document.getElementById('ButtonDownloadPublicKey').addEventListener('click', () => {
-      BrowserInterface.SavePublicKeyAsFile(ClubDrinkCoinCore.MyOwnKeyPair.publicKey);
+      BrowserInterface.SavePublicKeyAsFile(ClubDrinkCoinCore.MyWallet.keyPair.publicKey);
     });
 
     //copy to clipboard
     document.getElementById('ButtonCopyPublicKey').addEventListener('click', async () => {
-      const key = ClubDrinkCoinCore.MyOwnKeyPair.publicKey;
+      const key = ClubDrinkCoinCore.MyWallet.keyPair.publicKey;
       const encodedKey = await ClubDrinkCoinCore.GetBase64EncodedPublicKey(key);
     navigator.clipboard.writeText(encodedKey)
       .then(() => {
@@ -50,10 +68,39 @@
     }, 1000); // 5000ミリ秒 = 5秒
 
     async function showKey (){
-      const key = ClubDrinkCoinCore.MyOwnKeyPair.publicKey;
-      document.getElementById('publicKeyDom').textContent = await ClubDrinkCoinCore.GetBase64EncodedPublicKey(key);
+      if(ClubDrinkCoinCore.DoIHaveKeyPair === true){
+        const key = ClubDrinkCoinCore.MyWallet.keyPair.publicKey;
+        document.getElementById('publicKeyDom').textContent = await ClubDrinkCoinCore.GetBase64EncodedPublicKey(key);
+      }
+      if(ClubDrinkCoinCore.DoIHaveKeyPair === false){
+        document.getElementById('publicKeyDom').innerHTML = "You don't have key pair yet. <a href='#' id='InitNewKeyLink'>Create new one</a>. or <a href='#' id='ImportWalletLink'>Import from a file</a>.";
+        document.getElementById('InitNewKeyLink').addEventListener('click',async () => {
+          await BrowserInterface.InitNewWalletByClicking();
+          showKey();
+        });
+        document.getElementById('ImportWalletLink').addEventListener('click',async () => {
+          await BrowserInterface.ImportWalletByClicking(false);
+          showKey();
+        }
+        );
+      }
     }
-    
+
+    //Show hide options
+    document.getElementById('ButtonShowOptions').addEventListener('click', () => {
+      const downloadButton = document.getElementById('ButtonDownloadWallet');
+      const importButton = document.getElementById('ButtonImportWallet');
+      const createButton = document.getElementById('ButtonCreateNewWallet');
+      if (downloadButton.style.display === 'none') {
+        downloadButton.style.display = 'block';
+        importButton.style.display = 'block';
+        createButton.style.display = 'block';
+      } else {
+        downloadButton.style.display = 'none';
+        importButton.style.display = 'none';
+        createButton.style.display = 'none';
+      }
+    });
 
   </script>
 </body>

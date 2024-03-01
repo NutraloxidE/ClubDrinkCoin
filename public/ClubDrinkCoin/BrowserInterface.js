@@ -1,4 +1,104 @@
+import * as ClubDrinkCoinCore from './ClubDrinkCoinCore.js';
+
 /**Key stuff */
+
+export async function InitNewWalletByClicking() {
+  const walletName = prompt("Enter wallet name or description:");
+  const password = prompt("Enter password (DO NOT LOSE IT YOU CANT CHANGE PASSWORD):");
+  const confirmPW = prompt("Confirm password (!!!DO NOT LOSE IT YOU CANT CHANGE PASSWOR!!!):");
+
+  if (password == ""){
+    alert("Password cannot be empty");
+    return false;
+  }
+
+  if (password !== confirmPW) {
+    alert("Passwords do not match");
+    return false;
+  }
+
+  //generate new wallet
+  try{
+    var walletJustGenerated = await ClubDrinkCoinCore.Wallet.GetNewWallet(walletName, password);
+    ClubDrinkCoinCore.setMyWallet(walletJustGenerated);
+  } catch (e) {
+    alert("Error: " + e);
+    return false;
+  }
+
+  let userConfirmed = false;
+  while (!userConfirmed) {
+    userConfirmed = confirm("!!!!!!!!!IMPORTANT!!!!!!!!! \r\n\r\n You gonna download your wallet file now. Keep it safe and do not lose it. You will need it to access your wallet.");
+  }
+  SaveStoredWalletAsFile(walletJustGenerated.storedWallet);
+
+  ClubDrinkCoinCore.setDoIHaveKeyPair(true);
+
+}
+
+export async function ImportWalletByClicking (warning) {
+  if(warning) {
+    confirmOverwrite = confirm("Importing wallet will overwrite your current wallet. Are you sure?");
+    if (!confirmOverwrite) {
+      return false;
+    }
+  }
+
+  
+
+  // Create a file input element
+  let fileInput = document.createElement('input');
+  fileInput.type = 'file';
+
+  // Wait for the user to select a file
+  let file = await new Promise(resolve => {
+    fileInput.onchange = e => {
+      let file = e.target.files[0];
+      resolve(file);
+    };
+    fileInput.click();
+  });
+
+  // Read the file
+  let fileContent = await new Promise(resolve => {
+    let reader = new FileReader();
+    reader.onload = e => {
+      resolve(e.target.result);
+    };
+    reader.readAsText(file);
+  });
+  
+  let password = prompt("Enter password for the wallet:");
+  if (password == ""){
+    alert("Password cannot be empty");
+    return false;
+  }
+
+
+  let storedWalletJson = JSON.parse(fileContent);
+  console.log(storedWalletJson);
+
+
+  let wallet;
+  wallet = await ClubDrinkCoinCore.Wallet.LoadWalletFromStoredWalled(storedWalletJson, password);
+
+
+  ClubDrinkCoinCore.setMyWallet(wallet);
+  ClubDrinkCoinCore.setDoIHaveKeyPair(true);
+
+}
+
+export async function SaveStoredWalletAsFile(storedWallet) {
+  //Save StoredWallet as json file
+  const blob = new Blob([JSON.stringify(storedWallet)], {type: "application/json;charset=utf-8"});
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "wallet" + storedWallet.walletName + ".ClubDrinkCoinWallet";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
 
 export async function SavePublicKeyAsFile(key) {
   const exportedKey = await window.crypto.subtle.exportKey("spki", key);

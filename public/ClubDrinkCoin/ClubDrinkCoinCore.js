@@ -69,6 +69,51 @@ async function verifySignature(publicKey, message, signature) {
 /**
  * Key Saving and Loading related
  */
+export class Wallet {
+  constructor(storedWallet, keyPair) {
+    this.storedWallet = storedWallet;
+    this.keyPair = keyPair;
+  }
+
+  static async GetNewWallet (walletName, password) {
+    const keyPair = await generateKeyPair();
+    const storedWallet = await StoredWalletExporter(walletName, keyPair, password);
+    return new Wallet(storedWallet, keyPair);
+  }
+
+  static async LoadWalletFromStoredWalled (storedWallet, password) {
+    let keyPair = {};
+    keyPair.privateKey = await GetBase64DecodedPrivateKey(storedWallet.encodedPrivateKey, password);
+    keyPair.publicKey = await GetBase64DecodedPublicKey(storedWallet.encodedPublicKey);
+    return new Wallet(storedWallet, keyPair);
+  }
+
+}
+
+//its a interface for local and session storage
+export class StoredWallet {
+  constructor(walletName, encodedPublicKey, encodedPrivateKey) {
+    this.walletName = walletName;
+    this.encodedPublicKey = encodedPublicKey;
+    this.encodedPrivateKey = encodedPrivateKey;
+  }
+}
+
+async function StoredWalletExporter (walletName, keyPair, password) {
+  const exportedPublicKey = await GetBase64EncodedPublicKey(keyPair.publicKey);
+  const exportedPrivateKey = await GetBase64EncodedPrivateKey(keyPair.privateKey, password);
+  return new StoredWallet(walletName, exportedPublicKey, exportedPrivateKey);
+}
+
+//it check if the password is correct
+export async function isPasswordCorrect(base64EncodedKeyAndIv, password) {
+  try {
+    await GetBase64DecodedPrivateKey(base64EncodedKeyAndIv, password);
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
 
 export async function GetBase64EncodedPublicKey(key) {
   const exportedKey = await window.crypto.subtle.exportKey("spki", key);
@@ -94,6 +139,92 @@ export async function GetBase64DecodedPublicKey(base64EncodedKey) {
   );
   return key;
 }
+
+export async function GetBase64EncodedPrivateKey(key, password) {
+  const iv = crypto.getRandomValues(new Uint8Array(16));
+  const exportedKey = await crypto.subtle.exportKey("pkcs8", key);
+  const derivedKey = await window.crypto.subtle.deriveKey(
+    {
+      name: "PBKDF2",
+      salt: new TextEncoder().encode(password),
+      iterations: 100000,
+      hash: "SHA-256",
+    },
+    await crypto.subtle.importKey(
+      "raw",
+      new TextEncoder().encode(password),
+      "PBKDF2",
+      false,
+      ["deriveKey"]
+    ),
+    { name: "AES-CBC", length: 256 },
+    false,
+    ["encrypt", "decrypt"]
+  );
+  const encryptedKey = await crypto.subtle.encrypt(
+    {
+      name: "AES-CBC",
+      iv: iv,
+    },
+    derivedKey,
+    exportedKey
+  );
+  const keyAndIv = {
+    encryptedKey: new Uint8Array(encryptedKey),
+    iv: iv,
+  };
+  const keyAndIvArray = [...keyAndIv.encryptedKey, ...keyAndIv.iv];
+  const keyAndIvBase64 = btoa(String.fromCharCode(...keyAndIvArray));
+  return keyAndIvBase64;
+}
+
+export async function GetBase64DecodedPrivateKey(base64EncodedKeyAndIv, password) {
+  const keyAndIvBuffer = atob(base64EncodedKeyAndIv);
+  const keyAndIvArray = new Uint8Array(keyAndIvBuffer.length);
+  for (let i = 0; i < keyAndIvBuffer.length; i++) {
+    keyAndIvArray[i] = keyAndIvBuffer.charCodeAt(i);
+  }
+  const encryptedKey = keyAndIvArray.slice(0, keyAndIvArray.length - 16);
+  const iv = keyAndIvArray.slice(keyAndIvArray.length - 16);
+  const derivedKey = await window.crypto.subtle.deriveKey(
+    {
+      name: "PBKDF2",
+      salt: new TextEncoder().encode(password),
+      iterations: 100000,
+      hash: "SHA-256",
+    },
+    await crypto.subtle.importKey(
+      "raw",
+      new TextEncoder().encode(password),
+      "PBKDF2",
+      false,
+      ["deriveKey"]
+    ),
+    { name: "AES-CBC", length: 256 },
+    false,
+    ["encrypt", "decrypt"]
+  );
+  const key = await crypto.subtle.importKey(
+    "pkcs8",
+    await crypto.subtle.decrypt(
+      {
+        name: "AES-CBC",
+        iv: iv,
+      },
+      derivedKey,
+      encryptedKey
+    ),
+    {
+      name: "ECDSA",
+      namedCurve: "P-256",
+    },
+    true,
+    ["sign"]
+  );
+  return key;
+}
+
+
 
 /**
  * Transaction related
@@ -192,19 +323,64 @@ export class Blockchain {
 
 //Global variables
 export let MyOwnBlockChain = new Blockchain();
-window.MyOwnBlockChain = MyOwnBlockChain;
-export let MyOwnKeyPair;
-window.DEBUGShowMyOwnKeyPair = function () {
-  console.log(MyOwnKeyPair);
+export let DoIHaveKeyPair = false;
+export function setDoIHaveKeyPair (bool) {
+  DoIHaveKeyPair = bool;
+}
+
+export let MyWallet = new Wallet();
+export function getMyWallet() {
+  return MyWallet;
+}
+export function setMyWallet(wallet) { 
+  MyWallet = wallet;
 }
 
 async function main() { 
 
 }
 
+export async function InitializeNewKeyPair (password) {
+
+  /**
+   * What i do here:
+   * 1.make KeyPair by generateKeyPair();
+   * 2.set DoIHaveKeyPair to true
+   * 3.
+   */
+}
+
+async function encodeAndDecodeTest() {
+  //key generation test
+  let keyPair = await generateKeyPair();
+  console.log(keyPair);
+
+  //encode test
+  let encodedPrivateKey = await GetBase64EncodedPrivateKey(keyPair.privateKey, "password");
+  console.log("encodedprivatekey will be below:");
+  console.log(encodedPrivateKey);
+
+  //decode test
+  let decodedPrivateKey = await GetBase64DecodedPrivateKey(encodedPrivateKey, "password");
+  console.log("decodedprivatekey will be below:");
+  console.log(decodedPrivateKey);
+
+  //compare test
+  /**
+   * 
+   */
+  console.log("Are they same?");
+  const exportedOriginalKey = await crypto.subtle.exportKey("pkcs8", keyPair.privateKey);
+  const exportedDecodedKey = await crypto.subtle.exportKey("pkcs8", decodedPrivateKey);
+  console.log(ArrayBuffer.isView(exportedOriginalKey));
+  console.log(ArrayBuffer.isView(exportedDecodedKey));
+  console.log(exportedOriginalKey.byteLength === exportedDecodedKey.byteLength && new Uint8Array(exportedOriginalKey).every((value, index) => value === new Uint8Array(exportedDecodedKey)[index]));
+}
+
 async function keytest(){
   //key generation test
   let doIHaveAKeyPair = false;
+  let MyOwnKeyPair;
 
   if (doIHaveAKeyPair === false) {
     MyOwnKeyPair = await generateKeyPair();
@@ -233,8 +409,7 @@ async function blocktest() {
   console.log(JSON.stringify(MyOwnBlockChain, null, 4));
 
   const isValid = await MyOwnBlockChain.isChainValid();
-  console.log('Blockchain valid?' + isValid);
+  console.log(`Blockchain valid? ${isValid ? "valid" : "not valid"}.`);
 }
 
-keytest();
 main();
