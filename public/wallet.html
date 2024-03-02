@@ -23,7 +23,10 @@
   <h1>Club Drink Coin :)</h1>
   <p>The crypt currency for buying drink!</p>
   <br>
-  <h3>Your Wallet Address (Base64Encoded Public key)</h3>
+  <h3 id="DOMShowBalance"> Loading... </h3>
+  <br>
+  <h2>Your Wallet Address (Base64Encoded Public key)</h3>
+  <p id="DOMShowWalletName"> Loading... </p>
   <p id="publicKeyDom">Loading...</p>
   <button id="ButtonCopyPublicKey">Copy to clipboard</button>
   <button id="ButtonDownloadPublicKey">Save your address as .txt</button>
@@ -69,11 +72,22 @@
       });
     });
 
-    //Show key on the page
+    //Show balance and key on the page
     setInterval(async () => {
       // ここに5秒ごとに実行したいコードを書く
+      await showWalletName();
+      await showBalance();
       await showKey();
     }, 1000); // 5000ミリ秒 = 5秒
+
+    async function showWalletName () {
+      document.getElementById('DOMShowWalletName').textContent = "Wallet Name : " + ClubDrinkCoinCore.MyFullWallet.storedWallet.walletName;
+    }
+
+    async function showBalance () {
+      const balance = await ClubDrinkCoinCore.MyFullWallet.getBalance();
+      document.getElementById('DOMShowBalance').textContent = 'Your balance: ' + balance + ' CDC';
+    }
 
     async function showKey (){
       if(ClubDrinkCoinCore.DoIHaveKeyPair === true){

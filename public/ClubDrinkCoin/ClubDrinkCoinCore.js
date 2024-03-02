@@ -47,6 +47,10 @@ export class FullWallet {
     this.balance = 0;
   }
 
+  async getBalance () {
+    return this.balance;
+  }
+
   static async GetNewFullWallet (walletName, password) {
     const keyPair = await generateKeyPair();
     const storedWallet = await StoredWalletExporter(walletName, keyPair, password);
