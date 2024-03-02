@@ -240,9 +240,9 @@ async function verifySignature(publicKey, message, signature) {
  */
 
 export class Transaction {
-  constructor(fromAddress, toAddress, amount, signature, transactionID, timestamp, publicNote) {
-    this.fromAddress = fromAddress;//encoded public key
-    this.toAddress = toAddress;//encoded public key(receivers public key)
+  constructor(fromAddressEncoded, toAddressEncoded, amount, signature, transactionID, timestamp, publicNote) {
+    this.fromAddressEncoded = fromAddressEncoded;//encoded public key
+    this.toAddressEncoded = toAddressEncoded;//encoded public key(receivers public key)
     this.amount = amount;
     this.signature = signature;
     this.transactionID = transactionID;
@@ -250,36 +250,44 @@ export class Transaction {
     this.publicNote = publicNote; // Renamed from 'message'
   }
 
+  async getDecodedFromAddress() {
+    return await GetBase64DecodedPublicKey(this.fromAddressEncoded);
+  }
+
+  async getDecodedToAddress() {
+    return await GetBase64DecodedPublicKey(this.toAddressEncoded);
+  }
+
   //VerifyTransaction
   async isValid(publicKey) {
     // Decode the Base64-encoded public keys
-    const decodedFromAddress = await GetBase64DecodedPublicKey(this.fromAddress);
-    const decodedToAddress = await GetBase64DecodedPublicKey(this.toAddress);
+    const decodedFromAddress = await GetBase64DecodedPublicKey(this.fromAddressEncoded);
+    const decodedToAddress = await GetBase64DecodedPublicKey(this.toAddressEncoded);
 
     const transactionData = decodedFromAddress + decodedToAddress + this.amount;
     return await verifySignature(publicKey, transactionData, this.signature);
   }
 }
 
-export async function createTransaction(fromAddress, toAddress, amount, privateKey, publicNote) {
-  const transactionID = generateTransactionID(fromAddress, toAddress, amount);
+export async function createTransaction(fromAddressEncoded, toAddressEncoded, amount, privateKey, publicNote) {
+  const transactionID = generateTransactionID(fromAddressEncoded, toAddressEncoded, amount);
   const timestamp = new Date().toISOString();
-  const signature = await signTransaction(fromAddress, toAddress, amount, privateKey);
+  const signature = await signTransaction(fromAddressEncoded, toAddressEncoded, amount, privateKey);
 
-  return new Transaction(fromAddress, toAddress, amount, signature, transactionID, timestamp, publicNote);
+  return new Transaction(fromAddressEncoded, toAddressEncoded, amount, signature, transactionID, timestamp, publicNote);
 }
 
-async function signTransaction(fromAddress, toAddress, amount, privateKey) {
+async function signTransaction(fromAddressEncoded, toAddressEncoded, amount, privateKey) {
   // Decode the Base64-encoded public keys
-  const decodedFromAddress = await GetBase64DecodedPublicKey(fromAddress);
-  const decodedToAddress = await GetBase64DecodedPublicKey(toAddress);
+  const decodedFromAddress = await GetBase64DecodedPublicKey(fromAddressEncoded);
+  const decodedToAddress = await GetBase64DecodedPublicKey(toAddressEncoded);
 
   const transactionData = decodedFromAddress + decodedToAddress + amount;
   return await signMessage(privateKey, transactionData);
 }
 
-export async function generateTransactionID(fromAddress, toAddress, amount, signature) {
-  const msgUint8 = new TextEncoder().encode(fromAddress + toAddress + amount + signature);                                  
+export async function generateTransactionID(fromAddressEncoded, toAddressEncoded, amount, signature) {
+  const msgUint8 = new TextEncoder().encode(fromAddressEncoded + toAddressEncoded + amount + signature);                                  
   const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);                   
   const hashArray = Array.from(new Uint8Array(hashBuffer));                     
   const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join(''); 
@@ -393,7 +401,8 @@ async function transactiontest() {
   );
 
   // Verify the transaction
-  const isValid = await transaction.isValid(senderKeyPair.publicKey);
+  //const isValid = await transaction.isValid(senderKeyPair.publicKey);
+  const isValid = await transaction.isValid(await transaction.getDecodedFromAddress());
 
   console.log(`Transaction valid? ${isValid ? "valid" : "not valid"}.`);
   console.log(transaction);
