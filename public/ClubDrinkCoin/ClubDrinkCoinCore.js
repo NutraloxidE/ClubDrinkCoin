@@ -371,6 +371,10 @@ async function main() {
   transactiontest();
 }
 
+/**
+ * Test functions
+ */
+
 async function transactiontest() {
   console.log("---TEST Creating a new transaction...---");
   // Generate a key pair for the sender
@@ -459,4 +463,7 @@ async function blocktest() {
   console.log(`Blockchain valid? ${isValid ? "valid" : "not valid"}.`);
 }
 
+/**
+ * entry point
+ */
 main();
