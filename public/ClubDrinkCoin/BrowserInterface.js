@@ -25,7 +25,7 @@ export async function InitNewWalletByClicking() {
 
     //generate new wallet
     var walletJustGenerated = await ClubDrinkCoinCore.FullWallet.GetNewFullWallet(walletName, password);
-    ClubDrinkCoinCore.setMyWallet(walletJustGenerated);
+    ClubDrinkCoinCore.setMyFullWallet(walletJustGenerated);
     
     //save wallet to local storage
     var tempStoredWallet = walletJustGenerated.storedWallet;
@@ -133,9 +133,10 @@ export async function ImportWalletByClicking (warning) {
 
   let wallet;
   try{
-  wallet = await ClubDrinkCoinCore.FullWallet.LoadFullWalletFromStoredWallet(storedWalletJson, password);
+  wallet = await ClubDrinkCoinCore.FullWallet.LoadFullWalletFromStoredWalled(storedWalletJson, password);
   } catch (e) {
     alert("Password is incorrect or probably wrong file format: " + e);
+    console.log(e);
     return false;
   }
 
