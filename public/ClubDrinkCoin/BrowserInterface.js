@@ -59,6 +59,7 @@ export async function DeleteWalletFromLocalStorage() {
     return false;
   }
   localStorage.removeItem('storedWallet');
+  ClubDrinkCoinCore.setMyFullWallet(null);
   alert("Wallet deleted from local storage");
   ClubDrinkCoinCore.setDoIHaveKeyPair(false);
 }

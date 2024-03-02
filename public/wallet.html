@@ -22,10 +22,10 @@
 <body>
   <h1>Club Drink Coin :)</h1>
   <p>The crypt currency for buying drink!</p>
-  <br>
+  <hr>
   <h3 id="DOMShowBalance"> Loading... </h3>
   <br>
-  <h2>Your Wallet Address (Base64Encoded Public key)</h3>
+  <h3>Your Wallet Address (Base64Encoded Public key)</h3>
   <p id="DOMShowWalletName"> Loading... </p>
   <p id="publicKeyDom">Loading...</p>
   <button id="ButtonCopyPublicKey">Copy to clipboard</button>
@@ -37,8 +37,17 @@
   <button id="ButtonCreateNewWallet" style="display: none;">Create New Wallet</button>
   <p id = "BeCarefulLine" style="display: none;" > ----------------- Be careful! ----------------- </p>
   <button id="ButtonDeleteWalletFromLocalStorage" style="display: none;">!!!Delete Wallet!!!</button>
+  <hr>
+  <h3>Transfer</h3>
+  <p>Send CDC to someone, it makes transaction data and throw it to transaction pool</p>
+  <label for="addressInput">Recipient Address:</label>
+  <input type="text" id="addressInput" placeholder="Enter recipient address">
   <br>
-
+  <label for="amountInput">Amount:</label>
+  <input type="number" id="amountInput" placeholder="Enter amount">
+  <br>
+  <button id="sendButton">Send</button>
+  
   
 
   <!-- 
@@ -81,12 +90,24 @@
     }, 1000); // 5000ミリ秒 = 5秒
 
     async function showWalletName () {
-      document.getElementById('DOMShowWalletName').textContent = "Wallet Name : " + ClubDrinkCoinCore.MyFullWallet.storedWallet.walletName;
+      
+      if(ClubDrinkCoinCore.DoIHaveKeyPair === false){
+        document.getElementById('DOMShowWalletName').textContent = "Wallet Name:";
+        return;
+      }
+
+      document.getElementById('DOMShowWalletName').textContent = "Wallet Name:" + ClubDrinkCoinCore.MyFullWallet.storedWallet.walletName;
     }
 
     async function showBalance () {
+
+      if(ClubDrinkCoinCore.DoIHaveKeyPair === false){
+        document.getElementById('DOMShowBalance').textContent = "Your balance:";
+        return;
+      }
+
       const balance = await ClubDrinkCoinCore.MyFullWallet.getBalance();
-      document.getElementById('DOMShowBalance').textContent = 'Your balance: ' + balance + ' CDC';
+      document.getElementById('DOMShowBalance').textContent = 'Your balance:' + balance + ' CDC';
     }
 
     async function showKey (){

@@ -241,8 +241,8 @@ async function verifySignature(publicKey, message, signature) {
 
 export class Transaction {
   constructor(fromAddress, toAddress, amount, signature, transactionID, timestamp, publicNote) {
-    this.fromAddress = fromAddress;
-    this.toAddress = toAddress;
+    this.fromAddress = fromAddress;//encoded public key
+    this.toAddress = toAddress;//encoded public key(receivers public key)
     this.amount = amount;
     this.signature = signature;
     this.transactionID = transactionID;
@@ -250,8 +250,13 @@ export class Transaction {
     this.publicNote = publicNote; // Renamed from 'message'
   }
 
+  //VerifyTransaction
   async isValid(publicKey) {
-    const transactionData = this.fromAddress + this.toAddress + this.amount;
+    // Decode the Base64-encoded public keys
+    const decodedFromAddress = await GetBase64DecodedPublicKey(this.fromAddress);
+    const decodedToAddress = await GetBase64DecodedPublicKey(this.toAddress);
+
+    const transactionData = decodedFromAddress + decodedToAddress + this.amount;
     return await verifySignature(publicKey, transactionData, this.signature);
   }
 }
