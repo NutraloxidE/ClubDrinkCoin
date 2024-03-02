@@ -13,6 +13,8 @@ if (typeof window !== 'undefined') {
   crypto = window.crypto;
 } else if (typeof global !== 'undefined') {
   // Node.js環境
+  
+  // eslint-disable-next-line
   const WebCrypto = require('node-webcrypto-ossl');
   crypto = new WebCrypto();
 }
@@ -267,18 +269,6 @@ async function signTransaction(fromAddress, toAddress, amount, privateKey) {
   return await signMessage(privateKey, transactionData);
 }
 
-async function encryptMessage(message, publicKey) {
-  const msgUint8 = new TextEncoder().encode(message);
-  const encryptedMessage = await window.crypto.subtle.encrypt(
-    {
-      name: "RSA-OAEP",
-    },
-    publicKey,
-    msgUint8
-  );
-  return new Uint8Array(encryptedMessage);
-}
-
 export async function generateTransactionID(fromAddress, toAddress, amount, signature) {
   const msgUint8 = new TextEncoder().encode(fromAddress + toAddress + amount + signature);                                  
   const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);                   
@@ -401,6 +391,7 @@ async function transactiontest() {
   console.log("---TEST Transaction created.---");
 }
 
+// eslint-disable-next-line
 async function encodeAndDecodeTest() {
   //key generation test
   let keyPair = await generateKeyPair();
@@ -428,6 +419,7 @@ async function encodeAndDecodeTest() {
   console.log(exportedOriginalKey.byteLength === exportedDecodedKey.byteLength && new Uint8Array(exportedOriginalKey).every((value, index) => value === new Uint8Array(exportedDecodedKey)[index]));
 }
 
+// eslint-disable-next-line
 async function keytest(){
   //key generation test
   let doIHaveAKeyPair = false;
@@ -452,6 +444,7 @@ async function keytest(){
 
 }
 
+// eslint-disable-next-line
 async function blocktest() {
   //block cchain test
   MyOwnBlockChain.addBlock(new Block(1, "10/07/2021", { amount: 4 }));

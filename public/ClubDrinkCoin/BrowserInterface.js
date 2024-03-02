@@ -4,11 +4,11 @@ import * as ClubDrinkCoinCore from './ClubDrinkCoinCore.js';
 
 export async function InitNewWalletByClicking() {
   const walletName = prompt("Enter wallet name or description:");
-  if (walletName == null) { alert("Wallet creation cancelled"); return false; };
+  if (walletName == null) { alert("Wallet creation cancelled"); return false; }
   const password = prompt("Enter password (DO NOT LOSE IT YOU CANT CHANGE PASSWORD):");
-  if (password == null) { alert("Wallet creation cancelled"); return false; };
+  if (password == null) { alert("Wallet creation cancelled"); return false; }
   const confirmPW = prompt("Confirm password (!!!DO NOT LOSE IT YOU CANT CHANGE PASSWOR!!!):");
-  if (confirmPW == null) { alert("Wallet creation cancelled"); return false; };
+  if (confirmPW == null) { alert("Wallet creation cancelled"); return false; }
 
   if (password == ""){
     alert("Password cannot be empty");
@@ -47,7 +47,7 @@ export async function InitNewWalletByClicking() {
 
 }
 
-export async function DeleteWalletFromLocalStorage(storedWallet) {
+export async function DeleteWalletFromLocalStorage() {
 
   if (localStorage.getItem('storedWallet') == null) {
     alert("No wallet found in local storage");
