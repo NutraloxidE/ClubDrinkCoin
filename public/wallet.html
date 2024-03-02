@@ -46,6 +46,10 @@
   <label for="amountInput">Amount:</label>
   <input type="number" id="amountInput" placeholder="Enter amount">
   <br>
+  <label for="publicNoteInput">Public Note:</label>
+  <input type="text" id="publicNoteInput" placeholder="Enter public not(optional)">
+  <br>
+  
   <button id="sendButton">Send</button>
   
   
@@ -179,6 +183,48 @@
     deleteButton.addEventListener('click', async () => {
       await BrowserInterface.DeleteWalletFromLocalStorage();
       showKey();
+    });
+
+    //send button
+    const sendButton = document.getElementById('sendButton');
+    sendButton.addEventListener('click', async () => {
+      if(ClubDrinkCoinCore.DoIHaveKeyPair === false){
+        alert('You need to have a wallet to send CDC');
+        return;
+      }
+
+      //validation address 
+      let recipientAddress;
+      try{
+        recipientAddress = document.getElementById('addressInput').value;
+      } catch (e) {
+        alert(e.message);
+        return;
+      }
+
+      if (!ClubDrinkCoinCore.isValidBase64(recipientAddress)) {
+        alert(recipientAddress + "is not Valid Address");
+        throw new Error("Invalid Base64-encoded key");
+      }
+
+      //validation amount
+      const amountStr = document.getElementById('amountInput').value;
+      const amount = parseFloat(amountStr);
+      if (isNaN(amount)) {
+        throw new Error("Invalid amount");
+      }
+
+      //validation public note
+      const publicNote = document.getElementById('publicNoteInput').value;
+
+      const result = await ClubDrinkCoinCore.MyFullWallet.makeTransactionAndPropaganda(recipientAddress, amount, publicNote);
+      
+      if(result === true){
+        alert('Transaction is successful');
+      }
+      if(result === false){
+        alert('Transaction is failed');
+      }
     });
 
   </script>

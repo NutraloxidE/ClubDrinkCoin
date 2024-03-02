@@ -47,8 +47,24 @@ export class FullWallet {
     this.balance = 0;
   }
 
+  async getAccurateBalance () {
+    // Get the balance from the blockchain
+    //TODO: implement this
+    return null;
+  }
+
   async getBalance () {
     return this.balance;
+  }
+
+  async makeTransactionAndPropaganda(toAddressEncoded, amount, publicNote) {
+    // Create a new transaction
+    const transaction = await createTransaction(toAddressEncoded, toAddressEncoded, amount, this.keyPair.privateKey, publicNote);
+
+    await propagateTransaction(transaction);
+
+    return transaction;
+
   }
 
   static async GetNewFullWallet (walletName, password) {
@@ -97,6 +113,10 @@ export async function GetBase64EncodedPublicKey(key) {
 }
 
 export async function GetBase64DecodedPublicKey(base64EncodedKey) {
+  if (!isValidBase64(base64EncodedKey)) {
+    throw new Error("Invalid Base64-encoded key");
+  }
+
   const keyBuffer = window.atob(base64EncodedKey);
   const keyArray = new Uint8Array(keyBuffer.length);
   for (let i = 0; i < keyBuffer.length; i++) {
@@ -199,6 +219,19 @@ export async function GetBase64DecodedPrivateKey(base64EncodedKeyAndIv, password
   return key;
 }
 
+export function isValidBase64(str) {
+  const notBase64 = /[^A-Z0-9+\/=]/i;
+  const len = str.length;
+  if (!len || len % 4 !== 0 || notBase64.test(str)) {
+    return false;
+  }
+  const firstPaddingChar = str.indexOf('=');
+  return firstPaddingChar === -1 ||
+    firstPaddingChar === len - 1 ||
+    (firstPaddingChar === len - 2 && str[len - 1] === '=');
+}
+
+
 /**
  * Signature related
  */
@@ -269,10 +302,22 @@ export class Transaction {
   }
 }
 
+export async function propagateTransaction (transaction) {
+  // Propagate the transaction to the network
+  // (Assuming propagateTransaction is a function that sends the transaction to the network)
+  console.log("Transaction propagated to the network.");
+  console.log(transaction);
+  //TODO: implement this
+}
+
 export async function createTransaction(fromAddressEncoded, toAddressEncoded, amount, privateKey, publicNote) {
   const transactionID = generateTransactionID(fromAddressEncoded, toAddressEncoded, amount);
   const timestamp = new Date().toISOString();
   const signature = await signTransaction(fromAddressEncoded, toAddressEncoded, amount, privateKey);
+
+  if (!isValidBase64(fromAddressEncoded) || !isValidBase64(toAddressEncoded)) {
+    throw new Error("Invalid Base64-encoded key");
+  }
 
   return new Transaction(fromAddressEncoded, toAddressEncoded, amount, signature, transactionID, timestamp, publicNote);
 }
@@ -375,13 +420,13 @@ export function setMyFullWallet(wallet) {
 }
 
 async function main() { 
-  transactiontest();
 }
 
 /**
  * Test functions
  */
 
+// eslint-disable-next-line
 async function transactiontest() {
   console.log("---TEST Creating a new transaction...---");
   // Generate a key pair for the sender
