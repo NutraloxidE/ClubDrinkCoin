@@ -53,12 +53,12 @@
 
     //save publickey to file
     document.getElementById('ButtonDownloadPublicKey').addEventListener('click', () => {
-      BrowserInterface.SavePublicKeyAsFile(ClubDrinkCoinCore.MyWallet.keyPair.publicKey);
+      BrowserInterface.SavePublicKeyAsFile(ClubDrinkCoinCore.MyFullWallet.keyPair.publicKey);
     });
 
     //copy to clipboard
     document.getElementById('ButtonCopyPublicKey').addEventListener('click', async () => {
-      const key = ClubDrinkCoinCore.MyWallet.keyPair.publicKey;
+      const key = ClubDrinkCoinCore.MyFullWallet.keyPair.publicKey;
       const encodedKey = await ClubDrinkCoinCore.GetBase64EncodedPublicKey(key);
     navigator.clipboard.writeText(encodedKey)
       .then(() => {
@@ -77,7 +77,7 @@
 
     async function showKey (){
       if(ClubDrinkCoinCore.DoIHaveKeyPair === true){
-        const key = ClubDrinkCoinCore.MyWallet.keyPair.publicKey;
+        const key = ClubDrinkCoinCore.MyFullWallet.keyPair.publicKey;
         document.getElementById('publicKeyDom').textContent = await ClubDrinkCoinCore.GetBase64EncodedPublicKey(key);
       }
       if(ClubDrinkCoinCore.DoIHaveKeyPair === false){
@@ -121,7 +121,7 @@
 
     //save wallet to file
     DOMbuttonDownloadWallet.addEventListener('click', () => {
-      BrowserInterface.SaveStoredWalletAsFile(ClubDrinkCoinCore.MyWallet.storedWallet);
+      BrowserInterface.SaveStoredWalletAsFile(ClubDrinkCoinCore.MyFullWallet.storedWallet);
     });
 
     //import wallet from file

@@ -24,7 +24,7 @@ export async function InitNewWalletByClicking() {
   try{
 
     //generate new wallet
-    var walletJustGenerated = await ClubDrinkCoinCore.Wallet.GetNewWallet(walletName, password);
+    var walletJustGenerated = await ClubDrinkCoinCore.FullWallet.GetNewFullWallet(walletName, password);
     ClubDrinkCoinCore.setMyWallet(walletJustGenerated);
     
     //save wallet to local storage
@@ -82,9 +82,9 @@ export async function ImportWalletFromLocalStorage() {
     return false;
   }
 
-  wallet = await ClubDrinkCoinCore.Wallet.LoadWalletFromStoredWalled(storedWalletJson, password);
+  wallet = await ClubDrinkCoinCore.FullWallet.LoadFullWalletFromStoredWalled(storedWalletJson, password);
 
-  ClubDrinkCoinCore.setMyWallet(wallet);
+  ClubDrinkCoinCore.setMyFullWallet(wallet);
   ClubDrinkCoinCore.setDoIHaveKeyPair(true);
 }
 
@@ -133,14 +133,14 @@ export async function ImportWalletByClicking (warning) {
 
   let wallet;
   try{
-  wallet = await ClubDrinkCoinCore.Wallet.LoadWalletFromStoredWalled(storedWalletJson, password);
+  wallet = await ClubDrinkCoinCore.FullWallet.LoadFullWalletFromStoredWallet(storedWalletJson, password);
   } catch (e) {
     alert("Password is incorrect or probably wrong file format: " + e);
     return false;
   }
 
 
-  ClubDrinkCoinCore.setMyWallet(wallet);
+  ClubDrinkCoinCore.setMyFullWallet(wallet);
   ClubDrinkCoinCore.setDoIHaveKeyPair(true);
   alert("Wallet imported successfully!");
 }

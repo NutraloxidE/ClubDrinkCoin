@@ -38,25 +38,25 @@ async function generateKeyPair() {
 /**
  * Key Saving and Loading related
  */
-export class Wallet {
+export class FullWallet {
   constructor(storedWallet, keyPair) {
     this.storedWallet = storedWallet;
     this.keyPair = keyPair;
+    this.balance = 0;
   }
 
-  static async GetNewWallet (walletName, password) {
+  static async GetNewFullWallet (walletName, password) {
     const keyPair = await generateKeyPair();
     const storedWallet = await StoredWalletExporter(walletName, keyPair, password);
-    return new Wallet(storedWallet, keyPair);
+    return new FullWallet(storedWallet, keyPair);
   }
 
-  static async LoadWalletFromStoredWalled (storedWallet, password) {
+  static async LoadFullWalletFromStoredWalled (storedWallet, password) {
     let keyPair = {};
     keyPair.privateKey = await GetBase64DecodedPrivateKey(storedWallet.encodedPrivateKey, password);
     keyPair.publicKey = await GetBase64DecodedPublicKey(storedWallet.encodedPublicKey);
-    return new Wallet(storedWallet, keyPair);
+    return new FullWallet(storedWallet, keyPair);
   }
-
 }
 
 //its a interface for local and session storage
@@ -359,12 +359,12 @@ export function setDoIHaveKeyPair (bool) {
   DoIHaveKeyPair = bool;
 }
 
-export let MyWallet = new Wallet();
-export function getMyWallet() {
-  return MyWallet;
+export let MyFullWallet = new FullWallet();
+export function getMyFullWallet() {
+  return MyFullWallet;
 }
-export function setMyWallet(wallet) { 
-  MyWallet = wallet;
+export function setMyFullWallet(wallet) { 
+  MyFullWallet = wallet;
 }
 
 async function main() { 
