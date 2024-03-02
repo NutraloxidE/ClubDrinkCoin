@@ -71,10 +71,8 @@ export async function ImportWalletFromLocalStorage() {
     console.log("No wallet found in local storage");
     return false;
   }else{
-    console.log(storedWalletJson);
+    console.log("Wallet found in local storage");
   }
-
-  console.log(storedWalletJson);
 
   let wallet;
 

@@ -35,37 +35,6 @@ async function generateKeyPair() {
   return keyPair;
 }
 
-async function signMessage(privateKey, message) {
-  console.log(`Signing the message "${message}"...`);
-  const msgUint8 = new TextEncoder().encode(message);
-  const signature = await window.crypto.subtle.sign(
-      {
-          name: "ECDSA",
-          hash: {name: "SHA-256"},
-      },
-      privateKey,
-      msgUint8
-  );
-  console.log("Message signed.");
-  return new Uint8Array(signature);
-}
-
-async function verifySignature(publicKey, message, signature) {
-  console.log("Verifying the signature...");
-  const msgUint8 = new TextEncoder().encode(message);
-  const isValid = await window.crypto.subtle.verify(
-      {
-          name: "ECDSA",
-          hash: {name: "SHA-256"},
-      },
-      publicKey,
-      signature,
-      msgUint8
-  );
-  console.log("Signature verified.");
-  return isValid;
-}
-
 /**
  * Key Saving and Loading related
  */
@@ -224,6 +193,40 @@ export async function GetBase64DecodedPrivateKey(base64EncodedKeyAndIv, password
   return key;
 }
 
+/**
+ * Signature related
+ */
+
+async function signMessage(privateKey, message) {
+  console.log(`Signing the message "${message}"...`);
+  const msgUint8 = new TextEncoder().encode(message);
+  const signature = await window.crypto.subtle.sign(
+      {
+          name: "ECDSA",
+          hash: {name: "SHA-256"},
+      },
+      privateKey,
+      msgUint8
+  );
+  console.log("Message signed.");
+  return new Uint8Array(signature);
+}
+
+async function verifySignature(publicKey, message, signature) {
+  console.log("Verifying the signature...");
+  const msgUint8 = new TextEncoder().encode(message);
+  const isValid = await window.crypto.subtle.verify(
+      {
+          name: "ECDSA",
+          hash: {name: "SHA-256"},
+      },
+      publicKey,
+      signature,
+      msgUint8
+  );
+  console.log("Signature verified.");
+  return isValid;
+}
 
 
 /**
@@ -231,21 +234,49 @@ export async function GetBase64DecodedPrivateKey(base64EncodedKeyAndIv, password
  */
 
 export class Transaction {
-  constructor(fromAddress, toAddress, amount, signature, transactionID, timestamp) {
+  constructor(fromAddress, toAddress, amount, signature, transactionID, timestamp, publicNote) {
     this.fromAddress = fromAddress;
     this.toAddress = toAddress;
     this.amount = amount;
     this.signature = signature;
     this.transactionID = transactionID;
     this.timestamp = timestamp;
+    this.publicNote = publicNote; // Renamed from 'message'
+  }
+
+  async isValid(publicKey) {
+    const transactionData = this.fromAddress + this.toAddress + this.amount;
+    return await verifySignature(publicKey, transactionData, this.signature);
   }
 }
 
-export function createTransaction(fromAddress, toAddress, amount, signature) {
-  const transactionID = generateTransactionID(fromAddress, toAddress, amount, signature);
+export async function createTransaction(fromAddress, toAddress, amount, privateKey, publicNote) {
+  const transactionID = generateTransactionID(fromAddress, toAddress, amount);
   const timestamp = new Date().toISOString();
+  const signature = await signTransaction(fromAddress, toAddress, amount, privateKey);
 
-  return new Transaction(fromAddress, toAddress, amount, signature, transactionID, timestamp);
+  return new Transaction(fromAddress, toAddress, amount, signature, transactionID, timestamp, publicNote);
+}
+
+async function signTransaction(fromAddress, toAddress, amount, privateKey) {
+  // Decode the Base64-encoded public keys
+  const decodedFromAddress = await GetBase64DecodedPublicKey(fromAddress);
+  const decodedToAddress = await GetBase64DecodedPublicKey(toAddress);
+
+  const transactionData = decodedFromAddress + decodedToAddress + amount;
+  return await signMessage(privateKey, transactionData);
+}
+
+async function encryptMessage(message, publicKey) {
+  const msgUint8 = new TextEncoder().encode(message);
+  const encryptedMessage = await window.crypto.subtle.encrypt(
+    {
+      name: "RSA-OAEP",
+    },
+    publicKey,
+    msgUint8
+  );
+  return new Uint8Array(encryptedMessage);
 }
 
 export async function generateTransactionID(fromAddress, toAddress, amount, signature) {
@@ -285,7 +316,7 @@ export class Blockchain {
   }
 
   createGenesisBlock() {
-    return new Block(0, "01/01/2021", "Genesis block", "0");
+    return new Block(0, "03/02/2024", "Genesis block", "0");
   }
 
   getLatestBlock() {
@@ -337,7 +368,33 @@ export function setMyWallet(wallet) {
 }
 
 async function main() { 
+  transactiontest();
+}
 
+async function transactiontest() {
+  console.log("---TEST Creating a new transaction...---");
+  // Generate a key pair for the sender
+  const senderKeyPair = await generateKeyPair();
+  const encodedSenderPublicKey = await GetBase64EncodedPublicKey(senderKeyPair.publicKey);
+
+  // Generate a key pair for the receiver
+  const receiverKeyPair = await generateKeyPair();
+  const encodedReceiverPublicKey = await GetBase64EncodedPublicKey(receiverKeyPair.publicKey);
+
+  // Create a new transaction from the sender to the receiver
+  const transaction = await createTransaction(
+    encodedSenderPublicKey, // fromAddress
+    encodedReceiverPublicKey, // toAddress
+    100, // amount
+    senderKeyPair.privateKey // privateKey
+  );
+
+  // Verify the transaction
+  const isValid = await transaction.isValid(senderKeyPair.publicKey);
+
+  console.log(`Transaction valid? ${isValid ? "valid" : "not valid"}.`);
+  console.log(transaction);
+  console.log("---TEST Transaction created.---");
 }
 
 async function encodeAndDecodeTest() {
