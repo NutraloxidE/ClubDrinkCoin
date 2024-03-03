@@ -154,7 +154,7 @@ export async function SaveStoredWalletAsFile(storedWallet) {
   const link = document.createElement("a");
   link.href = url;
   await console.log(storedWallet);
-  link.download = await "wallet-" + storedWallet.walletName + ".ClubDrinkCoinWallet";
+  link.download = await "wallet-ver-" + storedWallet.version + "-" + storedWallet.walletName + ".ClubDrinkCoinWallet";
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);

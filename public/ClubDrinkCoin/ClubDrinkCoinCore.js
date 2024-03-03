@@ -85,8 +85,9 @@ export class FullWallet {
 export class StoredWallet {
   constructor(walletName, encodedPublicKey, encodedPrivateKey) {
     this.walletName = walletName;
-    this.encodedPublicKey = encodedPublicKey;
+    this.encodedPublicKey = encodedPublicKey; 
     this.encodedPrivateKey = encodedPrivateKey;
+    this.version  = "0.0.1";
   }
 }
 
