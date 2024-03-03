@@ -24,6 +24,7 @@ export async function InitNewWalletByClicking() {
   try{
 
     //generate new wallet
+    console.log("Generating new wallet");
     var walletJustGenerated = await ClubDrinkCoinCore.FullWallet.GetNewFullWallet(walletName, password);
     ClubDrinkCoinCore.setMyFullWallet(walletJustGenerated);
     
@@ -34,6 +35,7 @@ export async function InitNewWalletByClicking() {
 
   } catch (e) {
     alert("Error: " + e);
+    console.error(e);
     return false;
   }
 

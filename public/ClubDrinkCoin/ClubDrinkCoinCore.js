@@ -69,8 +69,14 @@ export class FullWallet {
 
   static async GetNewFullWallet (walletName, password) {
     const keyPair = await generateKeyPair();
-    const storedWallet = await StoredWalletExporter(walletName, keyPair, password);
-    return new FullWallet(storedWallet, keyPair);
+
+    let tempstoredWallet = new StoredWallet();
+    await tempstoredWallet.initialize(walletName, keyPair, password);
+
+    var isValid = await tempstoredWallet.isValid();
+    console.log(`is Wallet just got valid? ${isValid ? "valid" : "not valid"}.`);
+
+    return new FullWallet(tempstoredWallet, keyPair);
   }
 
   static async LoadFullWalletFromStoredWalled (storedWallet, password) {
@@ -83,18 +89,38 @@ export class FullWallet {
 
 //its a interface for local and session storage
 export class StoredWallet {
-  constructor(walletName, encodedPublicKey, encodedPrivateKey) {
-    this.walletName = walletName;
-    this.encodedPublicKey = encodedPublicKey; 
-    this.encodedPrivateKey = encodedPrivateKey;
-    this.version  = "0.0.1";
+  constructor() {
+    this.walletName;
+    this.encodedPublicKey;
+    this.encodedPrivateKey;
+    this.version;
+    this.WalletCreatedDate;
+    this.Base64signature;
   }
-}
 
-async function StoredWalletExporter (walletName, keyPair, password) {
-  const exportedPublicKey = await GetBase64EncodedPublicKey(keyPair.publicKey);
-  const exportedPrivateKey = await GetBase64EncodedPrivateKey(keyPair.privateKey, password);
-  return new StoredWallet(walletName, exportedPublicKey, exportedPrivateKey);
+  async initialize (walletName, keyPair, password) {
+    // Initialize the wallet, so it can be stored as json
+    this.walletName = walletName;
+    this.encodedPublicKey = await GetBase64EncodedPublicKey(keyPair.publicKey);
+    this.encodedPrivateKey = await GetBase64EncodedPrivateKey(keyPair.privateKey, password);
+    this.version = "0.0.1";
+    this.WalletCreatedDate = new Date().toISOString();
+
+    //Sign is just prooving the name, version and date of creation; not the private key
+    var signature = await signMessage(keyPair.privateKey, this.walletName + this.version + this.WalletCreatedDate);
+    this.Base64signature = encodeUint8ArrayToBase64(signature);
+  }
+
+  async isValid() {
+    // Verify the signature
+    const decodedPublickey = await GetBase64DecodedPublicKey(this.encodedPublicKey);
+    return await verifySignature(decodedPublickey, this.walletName + this.version + this.WalletCreatedDate, this.getDecodedSignature());
+  }
+  
+  getDecodedSignature() { 
+    return decodeBase64ToUint8Array(this.Base64signature);
+  }
+
 }
 
 //it check if the password is correct
@@ -105,6 +131,27 @@ export async function isPasswordCorrect(base64EncodedKeyAndIv, password) {
   } catch (error) {
     return false;
   }
+}
+
+// Uint8ArrayをBase64形式の文字列に変換
+function encodeUint8ArrayToBase64(bytes) {
+  let binary = '';
+  const len = bytes.byteLength;
+  for (let i = 0; i < len; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return window.btoa(binary);
+}
+
+// Base64形式の文字列をUint8Arrayに変換
+function decodeBase64ToUint8Array(base64) {
+  const binary_string = window.atob(base64);
+  const len = binary_string.length;
+  let bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) {
+    bytes[i] = binary_string.charCodeAt(i);
+  }
+  return bytes;
 }
 
 export async function GetBase64EncodedPublicKey(key) {
