@@ -7,6 +7,8 @@
  * Check if the environment is a browser or Node.js
  */
 
+import * as networking from './networking.js';
+
 let crypto;
 if (typeof window !== 'undefined') {
   // ブラウザ環境
@@ -50,6 +52,9 @@ export class FullWallet {
   async getAccurateBalance () {
     // Get the balance from the blockchain
     //TODO: implement this
+
+    throw new error("Not implemented yet");
+
     return null;
   }
 
@@ -61,7 +66,7 @@ export class FullWallet {
     // Create a new transaction
     const transaction = await createTransaction(toAddressEncoded, toAddressEncoded, amount, this.keyPair.privateKey, publicNote);
 
-    await propagateTransaction(transaction);
+    await networking.propagateTransaction(transaction);
 
     return transaction;
 
@@ -315,9 +320,13 @@ async function verifySignature(publicKey, message, signature) {
   return isValid;
 }
 
+/**
+ * Network related
+ * is moved to networking.js
+ */
 
 /**
- * Transaction related
+ * Transaction class related
  */
 
 export class Transaction {
@@ -348,14 +357,6 @@ export class Transaction {
     const transactionData = decodedFromAddress + decodedToAddress + this.amount;
     return await verifySignature(publicKey, transactionData, this.signature);
   }
-}
-
-export async function propagateTransaction (transaction) {
-  // Propagate the transaction to the network
-  // (Assuming propagateTransaction is a function that sends the transaction to the network)
-  console.log("Transaction propagated to the network.");
-  console.log(transaction);
-  //TODO: implement this
 }
 
 export async function createTransaction(fromAddressEncoded, toAddressEncoded, amount, privateKey, publicNote) {
@@ -468,6 +469,18 @@ export function setMyFullWallet(wallet) {
 }
 
 async function main() { 
+  addPeerToServer();
+}
+
+function addPeerToServer() {
+  setTimeout(() => {
+      fetch('/addpeer')
+      .then(response => response.text())
+      .then(data => console.log(data))
+      .catch((error) => {
+        console.error('Error:', error);
+      });
+  }, 3000);
 }
 
 /**
