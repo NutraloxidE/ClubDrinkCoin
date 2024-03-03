@@ -94,8 +94,8 @@ export class StoredWallet {
     this.encodedPublicKey;
     this.encodedPrivateKey;
     this.version;
-    this.WalletCreatedDate;
-    this.Base64signature;
+    this.WalletCreatedDate; //wallet createddate and
+    this.Base64signature; //signature (stored as base64) added
   }
 
   async initialize (walletName, keyPair, password) {
