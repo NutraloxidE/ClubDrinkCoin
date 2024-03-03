@@ -41,3 +41,6 @@ export async function propagateTransaction (transaction) {
 
 }
 
+export class NetworkManager {
+  
+}

@@ -10,16 +10,18 @@
 import * as networking from './networking.js';
 
 let crypto;
-if (typeof window !== 'undefined') {
-  // ブラウザ環境
-  crypto = window.crypto;
-} else if (typeof global !== 'undefined') {
-  // Node.js環境
-  
-  // eslint-disable-next-line
-  const WebCrypto = require('node-webcrypto-ossl');
-  crypto = new WebCrypto();
+async function initializeCrypto() {
+  if (typeof window !== 'undefined' && window.crypto) {
+    // ブラウザ環境
+    crypto = window.crypto;
+  } else if (typeof global !== 'undefined') {
+    // Node.js環境
+    const WebCrypto = require('node-webcrypto-ossl');
+    crypto = new WebCrypto();
+  }
 }
+
+await initializeCrypto();
 
 /**
  * Key Generation related

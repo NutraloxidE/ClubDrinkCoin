@@ -143,6 +143,10 @@ export async function ImportWalletByClicking (warning) {
     return false;
   }
 
+  //save wallet to local storage
+  var btempStoredWallet = storedWalletJson;
+  localStorage.setItem('storedWallet', JSON.stringify(btempStoredWallet));
+
 
   ClubDrinkCoinCore.setMyFullWallet(wallet);
   ClubDrinkCoinCore.setDoIHaveKeyPair(true);
