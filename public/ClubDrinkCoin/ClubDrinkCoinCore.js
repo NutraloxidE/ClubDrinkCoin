@@ -471,19 +471,9 @@ export function setMyFullWallet(wallet) {
 }
 
 async function main() { 
-  addPeerToServer();
+
 }
 
-function addPeerToServer() {
-  setTimeout(() => {
-      fetch('/addpeer')
-      .then(response => response.text())
-      .then(data => console.log(data))
-      .catch((error) => {
-        console.error('Error:', error);
-      });
-  }, 3000);
-}
 
 /**
  * Test functions
