@@ -68,7 +68,7 @@ export class FullWallet {
     // Create a new transaction
     const transaction = await createTransaction(toAddressEncoded, toAddressEncoded, amount, this.keyPair.privateKey, publicNote);
 
-    await networking.propagateTransaction(transaction);
+    await MyNetworkManager.propagateTransaction(transaction);
 
     return transaction;
 
@@ -365,6 +365,10 @@ export class Transaction {
   }
 }
 
+export async function compareTransaction(transaction1, transaction2) {
+  return transaction1.transactionID === transaction2.transactionID;
+}
+
 export async function createTransaction(fromAddressEncoded, toAddressEncoded, amount, privateKey, publicNote) {
   const transactionID = generateTransactionID(fromAddressEncoded, toAddressEncoded, amount);
   const timestamp = new Date().toISOString();
@@ -464,6 +468,9 @@ export class Blockchain {
  */
 
 //Global variables
+const CONST_MAX_PEERS = 5;
+
+export let MyNetworkManager = new networking.NetworkManager(CONST_MAX_PEERS);
 export let MyOwnBlockChain = new Blockchain();
 export let DoIHaveKeyPair = false;
 export function setDoIHaveKeyPair (bool) {
