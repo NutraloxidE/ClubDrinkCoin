@@ -20,6 +20,18 @@ import * as ClubDrinkCoinCore from './ClubDrinkCoinCore.js';
   }
  */
 
+/**
+ * ServerSide be like this
+// PeerJSサーバーを作成
+const peerServer = ExpressPeerServer(server, {
+  debug: true,
+  path: '/clubdrinkcoin'
+});
+
+// PeerJSサーバーをエンドポイントとして設定
+app.use('/peerjs', peerServer);
+ */
+
 
 export async function propagateTransaction (transaction) {
   // Propagate the transaction to the network
