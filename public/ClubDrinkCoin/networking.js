@@ -89,7 +89,7 @@ export class NetworkManager {
     // Get all peer IDs from the server
     const response = await fetch('/networking/getPeerIds');
     const data = await response.json();
-  
+
     // Connect to each peer
     data.forEach(peerId => {
       // Check if we're already connected to this peer
@@ -99,16 +99,16 @@ export class NetworkManager {
         conn.on('error', (error) => {
           console.log("NETWORK:"+"Error occurred in connection:", error);
         });
-  
+
         conn.on('open', () => {
           // When the connection is open, add the connection to the peers array
           this.peers.push(conn);
-  
+
           console.log("NETWORK:"+"Found a new peer! " + peerId);
         });
       }
     });
-  
+
     // Verify connections to peers and close if not connected
     this.peers.forEach((conn, index) => {
       if (data.includes(conn.peer)) {
@@ -126,11 +126,11 @@ export class NetworkManager {
         this.peers.splice(index, 1); // Remove the connection from the peers array
       }
     });
-  
+    
     if (this.peers.length > 0) {
       console.log("NETWORK:"+"Connected peers:", this.peers);
     }
-  
+
     return data;
   }
 
