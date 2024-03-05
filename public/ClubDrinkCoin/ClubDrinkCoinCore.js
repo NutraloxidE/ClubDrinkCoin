@@ -68,10 +68,7 @@ export class FullWallet {
     // Create a new transaction
     const transaction = await createTransaction(toAddressEncoded, toAddressEncoded, amount, this.keyPair.privateKey, publicNote);
 
-    //await MyNetworkManager.propagateTransaction(transaction);
-    
-    //test code
-    MyNetworkManager.sendMessageToPeers(transaction.publicNote);
+    await MyNetworkManager.propagateTransaction(transaction);
 
     return transaction;
 

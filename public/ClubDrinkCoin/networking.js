@@ -181,7 +181,7 @@ export class NetworkManager {
           peer.send(message);
           console.log("NETWORK:"+"Message sent to peer:", peer.peer); // Log output after sending the message
         } catch (error) {
-          console.log("NETWORK:"+"Error occurred while sending message:", error);
+          console.error("NETWORK:"+"Error occurred while sending message:", error);
         }
       } else {
         console.log("NETWORK:"+"Connection to peer is not open:", peer.peer); // Log output if the connection is not open
@@ -190,30 +190,43 @@ export class NetworkManager {
   }
 
   async propagateTransaction(transaction) {
-    // Propagate the transaction to the network
-    this.sendMessageToPeers(transaction);
+    // Propagate the transaction to the network, receiver triggers onDataReceived
+    const transactionJson = JSON.stringify(transaction);
+    this.sendMessageToPeers(transactionJson);
     console.log("Transaction propagated to the network.");
   }
 
   async onDataReceived(data, conn) {
     // Check if the data has all the properties of a Transaction
-    if (data.fromAddressEncoded && data.toAddressEncoded && data.amount && data.Base64signature && data.transactionID && data.timestamp && data.publicNote) {
-      console.log("The data is a transaction.");
-      this.onTransactionReceived(data);
+    try {
+      const jsondata = JSON.parse(data);
+
+      if (jsondata.fromAddressEncoded && jsondata.toAddressEncoded && jsondata.amount && jsondata.Base64signature && jsondata.transactionID && jsondata.timestamp && jsondata.publicNote) {
+        this.onTransactionReceived(jsondata);
+        return
+      }
+
+    } catch (error) {
+
     }
-    else if (data === 'ping') {
+
+    if (data === 'ping') {
       //do nothing
+      return
     }
     else {
       console.log("The data is not a transaction, sender: " + conn.peer);
       console.log(data);
       // TODO: Handle other types of data
+      return
     }
+
   }
 
   async onTransactionReceived(transaction) {
     console.log("Transaction received from a peer.");
     console.log(transaction);
+
 
     // TODO: Validate the transaction and add it to the transaction pool if it's valid
   }
