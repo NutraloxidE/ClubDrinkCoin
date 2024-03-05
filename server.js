@@ -34,8 +34,16 @@ let peerIds = [];
 
 // Endpoint to add a new peer ID
 app.post('/networking/addpeerID', (req, res) => {
+  const MAXPEERS = 10;
+
   const { peerId } = req.body;
   peerIds.push(peerId);
+
+  // If the array length exceeds 10, remove the oldest element
+  if (peerIds.length > MAXPEERS) {
+    peerIds.shift();
+  }
+
   res.json({ message: 'Peer ID added successfully.' });
 });
 

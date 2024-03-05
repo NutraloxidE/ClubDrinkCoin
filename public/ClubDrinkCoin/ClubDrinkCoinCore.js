@@ -68,7 +68,10 @@ export class FullWallet {
     // Create a new transaction
     const transaction = await createTransaction(toAddressEncoded, toAddressEncoded, amount, this.keyPair.privateKey, publicNote);
 
-    await MyNetworkManager.propagateTransaction(transaction);
+    //await MyNetworkManager.propagateTransaction(transaction);
+    
+    //test code
+    MyNetworkManager.sendMessageToPeers(transaction.publicNote);
 
     return transaction;
 
@@ -471,6 +474,8 @@ export class Blockchain {
 const CONST_MAX_PEERS = 5;
 
 export let MyNetworkManager = new networking.NetworkManager(CONST_MAX_PEERS);
+window.MyNetworkManager = MyNetworkManager;
+
 export let MyOwnBlockChain = new Blockchain();
 export let DoIHaveKeyPair = false;
 export function setDoIHaveKeyPair (bool) {
