@@ -92,18 +92,18 @@ export class NetworkManager {
 
     // Connect to each peer
     data.forEach(peerId => {
-      // Check if we're already connected to this peer
-      if (!this.peers.some(peer => peer.peer === peerId)) {
+      // Check if we're already connected to this peer or if the peerId is our own
+      if (peerId !== this.peer.id && !this.peers.some(peer => peer.peer === peerId)) {
         // If not, connect to this peer
         const conn = this.peer.connect(peerId);
         conn.on('error', (error) => {
           console.log("NETWORK:"+"Error occurred in connection:", error);
         });
-
+  
         conn.on('open', () => {
           // When the connection is open, add the connection to the peers array
           this.peers.push(conn);
-
+  
           console.log("NETWORK:"+"Found a new peer! " + peerId);
         });
       }
