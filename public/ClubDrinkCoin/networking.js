@@ -66,6 +66,9 @@ export class NetworkManager {
     this.peer.on('connection', (conn) => {
       console.log("NETWORK:"+'New Connection from:', conn.peer);
 
+      // Add the new connection to the peers array
+      this.peers.push(conn);
+
       //this triggers when a new peer sends us data
       conn.on('data', (data) => {
         this.onDataReceived(data, conn);
@@ -128,7 +131,7 @@ export class NetworkManager {
     });
     
     if (this.peers.length > 0) {
-      console.log("NETWORK:"+"Connected peers:", this.peers);
+      //console.log("NETWORK:"+"Connected peers:", this.peers);
     }
 
     return data;
