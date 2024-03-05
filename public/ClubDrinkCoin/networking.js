@@ -66,20 +66,31 @@ export class NetworkManager {
     this.peer.on('connection', (conn) => {
       console.log("NETWORK:"+'New Connection from:', conn.peer);
 
-      // Add the new connection to the peers array
-      this.peers.push(conn);
-
       //this triggers when a new peer sends us data
       conn.on('data', (data) => {
         this.onDataReceived(data, conn);
       });
 
+      // When the connection is open, add the connection to the peers array
+      conn.on('open', () => {
+        this.peers.push(conn);
+        this.sendMessageToPeers('Hello, new peer!');
+      });
+
+      // When the connection is closed, remove the connection from the peers array
+      conn.on('close', () => {
+        console.log("NETWORK:"+"Connection to peer is closed:", conn.peer);
+        const index = this.peers.indexOf(conn);
+        if (index > -1) {
+          this.peers.splice(index, 1);
+        }
+      });
     });
 
     // Run updateAndCheckPeers every 10 seconds
     setInterval(() => {
       this.updateAndCheckPeers();
-    }, 10000);
+    }, 5000);
 
     console.log("NetworkManager initialized.");
   }
@@ -99,34 +110,45 @@ export class NetworkManager {
       if (peerId !== this.peer.id && !this.peers.some(peer => peer.peer === peerId)) {
         // If not, connect to this peer
         const conn = this.peer.connect(peerId);
-        conn.on('error', (error) => {
-          console.log("NETWORK:"+"Error occurred in connection:", error);
-        });
-  
-        conn.on('open', () => {
-          // When the connection is open, add the connection to the peers array
-          this.peers.push(conn);
-  
-          console.log("NETWORK:"+"Found a new peer! " + peerId);
-        });
+        if (conn) { // Check if the connection is not undefined
+          conn.on('error', (error) => {
+            console.log("NETWORK:"+"Error occurred in connection:", error);
+          });
+    
+          conn.on('open', () => {
+            // When the connection is open, add the connection to the peers array
+            this.peers.push(conn);
+    
+            console.log("NETWORK:"+"Found a new peer! " + peerId);
+          });
+
+          conn.on('data', (data) => {
+            this.onDataReceived(data, conn);
+          });
+
+        } else {
+          console.log("NETWORK:"+"Failed to connect to peer:", peerId);
+        }
       }
     });
 
     // Verify connections to peers and close if not connected
     this.peers.forEach((conn, index) => {
-      if (data.includes(conn.peer)) {
-        conn.on('open', () => {
-          conn.send('ping');
-        });
-        conn.on('error', (error) => {
+      if (conn) { // Check if the connection is not undefined
+        if (data.includes(conn.peer)) {
+          conn.on('open', () => {
+            conn.send('ping');
+          });
+          conn.on('error', (error) => {
+            conn.close();
+            console.log("NETWORK:"+"Closed connection to non-existing peer:", conn.peer);
+            this.peers.splice(index, 1); // Remove the connection from the peers array
+          });
+        } else {
           conn.close();
           console.log("NETWORK:"+"Closed connection to non-existing peer:", conn.peer);
           this.peers.splice(index, 1); // Remove the connection from the peers array
-        });
-      } else {
-        conn.close();
-        console.log("NETWORK:"+"Closed connection to non-existing peer:", conn.peer);
-        this.peers.splice(index, 1); // Remove the connection from the peers array
+        }
       }
     });
     
@@ -154,11 +176,17 @@ export class NetworkManager {
   async sendMessageToPeers(message) {
     // Send the message to all connected peers
     this.peers.forEach(peer => {
-      peer.send(message);
-      console.log("NETWORK:"+"Message sent to peer:", peer.peer); // Log output after sending the message
+      if (peer.open) { // Check if the connection is open
+        try {
+          peer.send(message);
+          console.log("NETWORK:"+"Message sent to peer:", peer.peer); // Log output after sending the message
+        } catch (error) {
+          console.log("NETWORK:"+"Error occurred while sending message:", error);
+        }
+      } else {
+        console.log("NETWORK:"+"Connection to peer is not open:", peer.peer); // Log output if the connection is not open
+      }
     });
-
-    console.log("NETWORK:"+"Message sent to all connected peers. message:", message);
   }
 
   async propagateTransaction(transaction) {
