@@ -64,7 +64,7 @@ export class FullWallet {
     return this.balance;
   }
 
-  async makeTransactionAndPropaganda(toAddressEncoded, amount, publicNote) {
+  async makeTransactionAndPropaganda(toAddressEncoded, amount, fee, publicNote) {
     // Create a new transaction
     const transaction = await createTransaction(toAddressEncoded, toAddressEncoded, amount, fee, this.keyPair.privateKey, publicNote);
     await MyNetworkManager.propagateTransaction(transaction);
