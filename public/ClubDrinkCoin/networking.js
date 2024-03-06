@@ -55,9 +55,21 @@ export class NetworkManager {
     this.maxPeers = maxPeers; // Maximum number of peers to connect to
     this.peer = new Peer({ host: window.location.hostname, port: 3000, path: '/peerjs/clubdrinkcoin' }); // Create a new PeerJS instance
 
+    // Log PeerJS errors to the console
+    this.peer.on('error', (err) => {
+
+      if(err === 'peer-unavailable'){
+        return;
+      }
+
+      console.error("NETWORK:"+"PeerJS uncought error:", err);
+      
+    });
+
     //initialize
     this.peer.on('open', (id) => {
       console.log("NETWORK:"+'My peer ID is: ' + id);
+
       this.addPeerToServer(id);
       this.updateAndCheckPeers();
     });

@@ -484,7 +484,7 @@ export function setMyFullWallet(wallet) {
 }
 
 async function main() { 
-  transactionTest();
+
 }
 
 
