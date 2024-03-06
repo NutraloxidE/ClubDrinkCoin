@@ -202,7 +202,7 @@ export class NetworkManager {
       const jsondata = JSON.parse(data);
 
       if (jsondata.fromAddressEncoded && jsondata.toAddressEncoded && jsondata.amount && jsondata.Base64signature && jsondata.transactionID && jsondata.timestamp && jsondata.publicNote) {
-        this.onTransactionReceived(jsondata);
+        this.onTransactionReceived(jsondata, conn);
         return
       }
 
@@ -223,8 +223,8 @@ export class NetworkManager {
 
   }
 
-  async onTransactionReceived(transaction) {
-    console.log("Transaction received from a peer.");
+  async onTransactionReceived(transaction, conn) {
+    console.log("Transaction received from a peer, sender: " + conn.peer);
     console.log(transaction);
 
 
