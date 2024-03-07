@@ -32,6 +32,8 @@ app.use('/peerjs', peerServer);
 // Array to store peer IDs
 let peerIds = [];
 
+
+
 // Endpoint to add a new peer ID
 app.post('/networking/addpeerID', (req, res) => {
   const MAXPEERS = 10;

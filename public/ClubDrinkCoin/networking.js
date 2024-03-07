@@ -62,6 +62,20 @@ export class NetworkManager {
       this.updateAndCheckPeers();
     });
 
+    //reinitialize when the page is visible again
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        // The page is visible again
+        // Perform necessary initialization here
+        console.log("NETWORK:"+'Page is visible again. Reinitializing...');
+        try {
+          this.updateAndCheckPeers();
+        } catch (error) {
+          console.error("NETWORK:"+"Error occurred while reinitializing:", error);
+        }
+      }
+    });
+
     //this triggers when a new peer connects to us
     this.peer.on('connection', (conn) => {
       console.log("NETWORK:"+'New Connection from:', conn.peer);

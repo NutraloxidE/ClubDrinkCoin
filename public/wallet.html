@@ -51,6 +51,14 @@
   <br>
   
   <button id="sendButton">Send</button>
+  <hr>
+  <!-- Add this HTML at the end of the body tag -->
+  <h3>Send Message</h3>
+  <p>Send a message to all peers in the network</p>
+  <label for="messageInput">Message:</label>
+  <input type="text" id="messageInput" placeholder="Enter message">
+  <br>
+  <button id="sendMessageButton">Send Message</button>
   
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.2/peerjs.min.js" integrity="sha512-o/HHmG8jeysxAxgj7HH5ZZnXOwWYS7D9oGVJH+TdRIpEYj01/m9Dm26vmcOtfhou2QbzPXFdnewbEp6v9I0U0g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>  <!-- 
@@ -224,6 +232,14 @@
       if(result === false){
         alert('Transaction is failed');
       }
+    });
+
+    //send message button (debug)
+    // Add this JavaScript in the script tag
+    const sendMessageButton = document.getElementById('sendMessageButton');
+    sendMessageButton.addEventListener('click', () => {
+      const message = document.getElementById('messageInput').value;
+      MyNetworkManager.sendMessageToPeers(message);
     });
 
   </script>
