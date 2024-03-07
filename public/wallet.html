@@ -70,7 +70,11 @@
 
     //Get wallet if local storage has it
     window.onload = async () => {
-      await BrowserInterface.ImportWalletFromLocalStorage();
+      try {
+        await BrowserInterface.ImportWalletFromLocalStorage();
+      } catch (e) {
+        console.error("Couldn't load wallet proper :( "+e);
+      }
       await showKey();
     }; 
 

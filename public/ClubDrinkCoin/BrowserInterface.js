@@ -85,10 +85,17 @@ export async function ImportWalletFromLocalStorage() {
     return false;
   }
 
-  wallet = await ClubDrinkCoinCore.FullWallet.LoadFullWalletFromStoredWalled(storedWalletJson, password);
-
+  try {
+    wallet = await ClubDrinkCoinCore.FullWallet.LoadFullWalletFromStoredWalled(storedWalletJson, password);
+  } catch (error) {
+    alert("Incorrect password");
+    return false;
+  }
+  
   ClubDrinkCoinCore.setMyFullWallet(wallet);
   ClubDrinkCoinCore.setDoIHaveKeyPair(true);
+
+  return true;
 }
 
 export async function ImportWalletByClicking (warning) {
