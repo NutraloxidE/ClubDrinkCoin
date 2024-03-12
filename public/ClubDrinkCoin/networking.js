@@ -5,52 +5,8 @@ import * as ClubDrinkCoinCore from './ClubDrinkCoinCore.js';
  * @param {*} it propagates the transaction to the network
  */
 
-/**
- * to AI (probably github): this is the structure of the transaction object
- * if you are able to access to ClubDrinkCoinCore.js, refer to the Transaction class
-  export class Transaction {
-    constructor(fromAddressEncoded, toAddressEncoded, amount, Base64signature, transactionID, timestamp, publicNote) {
-      this.fromAddressEncoded = fromAddressEncoded;//encoded public key
-      this.toAddressEncoded = toAddressEncoded;//encoded public key(receivers public key)
-      this.amount = amount;
-      this.Base64signature = Base64signature;
-      this.transactionID = transactionID;
-      this.timestamp = timestamp;
-      this.publicNote = publicNote; // Renamed from 'message'
-    }
- */
-
-/**
- * To AI:ServerSide be like this
-// PeerJSサーバーを作成
-const peerServer = ExpressPeerServer(server, {
-  debug: true,
-  path: '/clubdrinkcoin'
-});
-
-// PeerJSサーバーをエンドポイントとして設定
-app.use('/peerjs', peerServer);
-
-// Array to store peer IDs
-let peerIds = [];
-
-// Endpoint to add a new peer ID
-app.post('/networking/addpeerID', (req, res) => {
-  const { peerId } = req.body;
-  peerIds.push(peerId);
-  res.json({ message: 'Peer ID added successfully.' });
-});
-
-// Endpoint to get all peer IDs
-app.get('/networking/getPeerIds', (req, res) => {
-  res.json(peerIds);
-});
- */
-
-
 export class NetworkManager {
   constructor(maxPeers) {
-    this.transactionpool = [];
     this.peers = []; // Array to store connected peers
     this.maxPeers = maxPeers; // Maximum number of peers to connect to
     this.peer = new Peer({ host: window.location.hostname, port: 3000, path: '/peerjs/clubdrinkcoin' }); // Create a new PeerJS instance
@@ -62,7 +18,7 @@ export class NetworkManager {
         return;
       }
 
-      console.error("NETWORK:"+"PeerJS uncought error:", err);
+      //console.error("NETWORK:"+"PeerJS uncought error:", err);
       
     });
 
@@ -86,6 +42,24 @@ export class NetworkManager {
           console.error("NETWORK:"+"Error occurred while reinitializing:", error);
         }
       }
+    });
+
+    window.addEventListener('beforeunload', function (e) {
+      // Replace 'yourPeerId' with the actual peer ID you want to remove
+      const peerId = peer.id;
+
+      // Send a POST request to the server to remove the peer ID
+      fetch('/networking/removepeerID', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ peerId }),
+      });
+
+      // Prevent the default action
+      e.preventDefault();
+      e.returnValue = '';
     });
 
     //this triggers when a new peer connects to us
@@ -112,11 +86,6 @@ export class NetworkManager {
         }
       });
     });
-
-    // Run updateAndCheckPeers every 10 seconds
-    setInterval(() => {
-      this.updateAndCheckPeers();
-    }, 5000);
 
     console.log("NetworkManager initialized.");
   }
@@ -145,7 +114,7 @@ export class NetworkManager {
             // When the connection is open, add the connection to the peers array
             this.peers.push(conn);
     
-            console.log("NETWORK:"+"Found a new peer! " + peerId);
+            console.log("NETWORK:"+"Found a new peer by updateAndCheckPeers!:" + peerId);
           });
 
           conn.on('data', (data) => {
@@ -196,6 +165,7 @@ export class NetworkManager {
     });
 
     const data = await response.json();
+    
     console.log(data);
   }
 
@@ -216,25 +186,32 @@ export class NetworkManager {
   }
 
   async propagateTransaction(transaction) {
-    // Propagate the transaction to the network, receiver triggers onDataReceived
-    const transactionJson = JSON.stringify(transaction);
-    this.sendMessageToPeers(transactionJson);
+    // Wrap the transaction in an array and propagate it to the network
+    const transactionArrayJson = JSON.stringify([transaction]);
+    this.sendMessageToPeers(transactionArrayJson);
     console.log("Transaction propagated to the network.");
   }
 
   async onDataReceived(data, conn) {
     // Check if the data has all the properties of a Transaction
-    try {
-      const jsondata = JSON.parse(data);
+ try {
+    const jsonData = JSON.parse(data);
 
-      if (jsondata.fromAddressEncoded && jsondata.toAddressEncoded && jsondata.amount && jsondata.Base64signature && jsondata.transactionID && jsondata.timestamp && jsondata.publicNote) {
-        this.onTransactionReceived(jsondata, conn);
-        return
-      }
-
-    } catch (error) {
-
+    if (Array.isArray(jsonData) && jsonData.every(transaction => 
+      transaction.fromAddressEncoded && 
+      transaction.toAddressEncoded && 
+      transaction.amount && 
+      transaction.Base64signature && 
+      transaction.transactionID && 
+      transaction.timestamp && 
+      transaction.publicNote)) {
+      jsonData.forEach(transaction => this.onTransactionReceived(transaction, conn));
+      return;
     }
+
+  } catch (error) {
+
+  }
 
     if (data === 'ping') {
       //do nothing

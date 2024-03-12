@@ -32,8 +32,6 @@ app.use('/peerjs', peerServer);
 // Array to store peer IDs
 let peerIds = [];
 
-
-
 // Endpoint to add a new peer ID
 app.post('/networking/addpeerID', (req, res) => {
   const MAXPEERS = 10;
@@ -47,6 +45,17 @@ app.post('/networking/addpeerID', (req, res) => {
   }
 
   res.json({ message: 'Peer ID added successfully.' });
+});
+
+// End point to remove their own peer ID before closing the tab
+app.post('/networking/removepeerID', (req, res) => {
+  const { peerId } = req.body;
+  const index = peerIds.indexOf(peerId);
+  if (index > -1) {
+    peerIds.splice(index, 1);
+  }
+  res.json({ message: 'Peer ID removed successfully.' });
+  console.log('Peer ID removed:', peerId);
 });
 
 // Endpoint to get all peer IDs

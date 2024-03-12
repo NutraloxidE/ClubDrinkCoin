@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>My Onsen UI App</title>
+  <link rel="stylesheet" href="https://unpkg.com/onsenui/css/onsenui.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/onsenui/css/onsen-css-components.min.css">
+  <script src="https://unpkg.com/onsenui/js/onsenui.min.js"></script>
+</head>
+<body>
+  <ons-tabbar position="bottom">
+    <ons-tab page="home.html" label="Home" active></ons-tab>
+    <ons-tab page="transfer.html" label="Transfer"></ons-tab>
+  </ons-tabbar>
+
+  <template id="home.html">
+    <ons-page id="HomePage">
+      <ons-toolbar>
+        <div class="center">Home</div>
+      </ons-toolbar>
+      <!-- Home page content -->
+    </ons-page>
+  </template>
+
+  <template id="transfer.html">
+    <ons-page id="TransferPage">
+      <ons-toolbar>
+        <div class="center">Transfer</div>
+      </ons-toolbar>
+      <!-- Transfer page content -->
+    </ons-page>
+  </template>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.2/peerjs.min.js" integrity="sha512-o/HHmG8jeysxAxgj7HH5ZZnXOwWYS7D9oGVJH+TdRIpEYj01/m9Dm26vmcOtfhou2QbzPXFdnewbEp6v9I0U0g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script> 
+  <script type="module">
+    import * as ClubDrinkCoinCore from './ClubDrinkCoin/ClubDrinkCoinCore.js';
+    import * as BrowserInterface from './ClubDrinkCoin/BrowserInterface.js';
+  </script>
+</body>
+</html>
