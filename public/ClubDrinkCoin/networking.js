@@ -5,6 +5,20 @@ import * as ClubDrinkCoinCore from './ClubDrinkCoinCore.js';
  * @param {*} it propagates the transaction to the network
  */
 
+/** TO AI: this is structure of transaction
+export class Transaction {
+  constructor(fromAddressEncoded, toAddressEncoded, amount, fee, Base64signature, transactionID, timestamp, publicNote) {
+    this.fromAddressEncoded = fromAddressEncoded;
+    this.toAddressEncoded = toAddressEncoded;
+    this.amount = amount;
+    this.fee = fee; // Added fee
+    this.Base64signature = Base64signature;
+    this.transactionID = transactionID;
+    this.timestamp = timestamp;
+    this.publicNote = publicNote;
+  }
+ */
+
 export class NetworkManager {
   constructor(maxPeers) {
     this.peers = []; // Array to store connected peers
@@ -193,45 +207,65 @@ export class NetworkManager {
   }
 
   async onDataReceived(data, conn) {
-    // Check if the data has all the properties of a Transaction
- try {
-    const jsonData = JSON.parse(data);
-
-    if (Array.isArray(jsonData) && jsonData.every(transaction => 
-      transaction.fromAddressEncoded && 
-      transaction.toAddressEncoded && 
-      transaction.amount && 
-      transaction.Base64signature && 
-      transaction.transactionID && 
-      transaction.timestamp && 
-      transaction.publicNote)) {
-      jsonData.forEach(transaction => this.onTransactionReceived(transaction, conn));
-      return;
+    // Check if the data is an array of transactions
+    try {
+      const jsonData = JSON.parse(data);
+  
+      if (Array.isArray(jsonData) && jsonData.every(item => this.isTransaction(item))) {
+        jsonData.forEach(transaction => this.onTransactionReceived(transaction, conn));
+        return;
+      }
+  
+    } catch (error) {
+      console.error("NETWORK:"+"Error occurred while parsing data:", error);
     }
-
-  } catch (error) {
-
-  }
-
+  
     if (data === 'ping') {
       //do nothing
       return
     }
     else {
-      console.log("The data is not a transaction, sender: " + conn.peer);
+      console.log("NETWORK:"+"The data is not a transaction, sender: " + conn.peer);
       console.log(data);
       // TODO: Handle other types of data
       return
     }
-
   }
 
-  async onTransactionReceived(transaction, conn) {
-    console.log("Transaction received from a peer, sender: " + conn.peer);
-    console.log(transaction);
+  isTransaction(item) {
+    // Check if the item has all the properties of a Transaction
+    return item.hasOwnProperty('fromAddressEncoded') &&
+      item.hasOwnProperty('toAddressEncoded') &&
+      item.hasOwnProperty('amount') &&
+      item.hasOwnProperty('fee') &&
+      item.hasOwnProperty('Base64signature') &&
+      item.hasOwnProperty('transactionID') &&
+      item.hasOwnProperty('timestamp') &&
+      item.hasOwnProperty('publicNote');
+  }
 
+  async onTransactionReceived(transactionData, conn) {
+    console.log("Transaction data received from a peer, sender: " + conn.peer);
+    console.log(transactionData);
+
+    // Convert the transaction data to a Transaction instance
+    const transaction = new ClubDrinkCoinCore.Transaction(
+      transactionData.fromAddressEncoded,
+      transactionData.toAddressEncoded,
+      transactionData.amount,
+      transactionData.fee,
+      transactionData.Base64signature,
+      transactionData.transactionID,
+      transactionData.timestamp,
+      transactionData.publicNote
+    );
 
     // TODO: Validate the transaction and add it to the transaction pool if it's valid
+    const isValid = transaction.isValid();
+    if(isValid){
+      console.log("Transaction is valid");
+      ClubDrinkCoinCore.MyTransactionPool.push(transaction);
+    }
   }
 
 }

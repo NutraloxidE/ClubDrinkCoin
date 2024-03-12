@@ -67,6 +67,13 @@ export class FullWallet {
   async makeTransactionAndPropaganda(toAddressEncoded, amount, fee, publicNote) {
     // Create a new transaction
     const transaction = await createTransaction(toAddressEncoded, toAddressEncoded, amount, fee, this.keyPair.privateKey, publicNote);
+
+    let isValid = await transaction.isValid();
+    if (!isValid) {
+      throw new Error("Invalid transaction");
+    }
+
+    await MyTransactionPool.push(transaction);
     await MyNetworkManager.propagateTransaction(transaction);
 
     return transaction;
@@ -355,12 +362,12 @@ export class Transaction {
   }
 
   //VerifyTransaction
-  async isValid(publicKey) {
+  async isValid() {
     const decodedFromAddress = await GetBase64DecodedPublicKey(this.fromAddressEncoded);
     const decodedToAddress = await GetBase64DecodedPublicKey(this.toAddressEncoded);
 
     const transactionDataCombined = decodedFromAddress + decodedToAddress + this.amount + this.fee + this.publicNote + this.transactionID + this.timestamp;
-    return await verifySignature(publicKey, transactionDataCombined, await this.getDecodedSignature());
+    return await verifySignature(decodedFromAddress, transactionDataCombined, await this.getDecodedSignature());
   }
 }
 
@@ -369,8 +376,9 @@ export async function compareTransaction(transaction1, transaction2) {
 }
 
 export async function createTransaction(fromAddressEncoded, toAddressEncoded, amount, fee, privateKey, publicNote) {
-  const transactionID = generateTransactionID(fromAddressEncoded, toAddressEncoded, amount, fee);
   const timestamp = new Date().toISOString();
+  const transactionID = await generateTransactionID(fromAddressEncoded, toAddressEncoded, amount, fee, timestamp);
+
   const Base64signature = await signTransactionBase64(fromAddressEncoded, toAddressEncoded, amount, fee, privateKey, publicNote, transactionID, timestamp);
   if (!isValidBase64(fromAddressEncoded) || !isValidBase64(toAddressEncoded)) {
     throw new Error("Invalid Base64-encoded key");
@@ -390,8 +398,9 @@ async function signTransactionBase64(fromAddressEncoded, toAddressEncoded, amoun
   return Base64signature;
 }
 
-export async function generateTransactionID(fromAddressEncoded, toAddressEncoded, amount, fee, signature) {
-  const msgUint8 = new TextEncoder().encode(fromAddressEncoded + toAddressEncoded + amount + signature);                                  
+export async function generateTransactionID(fromAddressEncoded, toAddressEncoded, amount, fee, signature, timestamp) {
+
+  const msgUint8 = new TextEncoder().encode(fromAddressEncoded + toAddressEncoded + amount+ fee + signature + timestamp);                                  
   const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);                   
   const hashArray = Array.from(new Uint8Array(hashBuffer));                     
   const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join(''); 
@@ -466,6 +475,9 @@ export class Blockchain {
 //Global variables
 const CONST_MAX_PEERS = 5;
 
+export let MyTransactionPool = [];
+window.MyTransactionPool = MyTransactionPool;
+
 export let MyNetworkManager = new networking.NetworkManager(CONST_MAX_PEERS);
 window.MyNetworkManager = MyNetworkManager;
 
@@ -484,7 +496,7 @@ export function setMyFullWallet(wallet) {
 }
 
 async function main() { 
-
+  
 }
 
 

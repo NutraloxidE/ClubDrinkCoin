@@ -48,6 +48,9 @@
   <label for="amountInput">Amount:</label>
   <input type="number" id="amountInput" placeholder="Enter amount">
   <br>
+  <label for="feeInput">Fee:</label>
+  <input type="number" id="feeInput" placeholder="Enter fee">
+  <br>
   <label for="publicNoteInput">Public Note:</label>
   <input type="text" id="publicNoteInput" placeholder="Enter public not(optional)">
   <br>
@@ -227,10 +230,17 @@
         throw new Error("Invalid amount");
       }
 
+      //validation fee
+      const feeStr = document.getElementById('feeInput').value;
+      const fee = parseFloat(feeStr);
+      if (isNaN(fee)) {
+        throw new Error("Invalid fee");
+      }
+
       //validation public note
       const publicNote = document.getElementById('publicNoteInput').value;
 
-      const result = await ClubDrinkCoinCore.MyFullWallet.makeTransactionAndPropaganda(recipientAddress, amount, publicNote);
+      const result = await ClubDrinkCoinCore.MyFullWallet.makeTransactionAndPropaganda(recipientAddress, amount, fee, publicNote);
       
       if(result === true){
         alert('Transaction is successful');
